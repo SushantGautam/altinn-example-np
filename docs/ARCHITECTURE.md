@@ -6,8 +6,8 @@ The diagrams distinguish **implemented components** from **future options**. Thi
 
 ```mermaid
 flowchart TB
-  subgraph A["A. Real native Altinn application (studioctl)"]
-    U["LocalTest test-user login"] --> AL["Altinn Apps .NET runtime<br/>ttd/nepal-licence :8000"]
+  subgraph A["A. Real native Altinn application (studioctl container mode)"]
+    U["LocalTest test-user login"] --> AL["Altinn Apps .NET runtime in Docker<br/>ttd/nepal-licence :8000"]
     AL --> BM["Altinn BPMN / data model / Altinn UI"]
     BM --> LT["LocalTest shared platform emulators<br/>Storage · Authentication · Authorization · Register"]
     BM --> PREF["IInstantiationProcessor: native prefill hook"]
@@ -19,14 +19,14 @@ flowchart TB
     SIM --> INB["Simulated Nagarik inbox"]
     SIM --> REG["Synthetic civil / company / transport registry data"]
   end
-  PREF -- "localhost HTTP / token" --> DOTM["Mock DoTM registry endpoint :8085"]
-  END -- "localhost HTTP / token" --> INB
+  PREF -- "Docker service DNS + ephemeral token" --> DOTM["Mock DoTM registry endpoint :8085"]
+  END -- "Docker service DNS + ephemeral token" --> INB
   PORT -. "Link only; NOT SSO" .-> AL
 ```
 
 **Separate trust domains:** the Keycloak browser session does **not** authenticate users in the native Altinn application. LocalTest users are separate test identities. The synthetic bridge uses an internal demonstration token, not national identity credentials.
 
-**Ports:** native Altinn `local.altinn.cloud:8000`; Nepal presentation `localhost:8085`; Keycloak `localhost:8081`. Running `docker compose up` by itself uses `localhost:8000` for the presentation UI; it cannot share that port with the native Altinn app.
+**Ports:** native Altinn `local.altinn.cloud:8000`; Nepal presentation `localhost:8085`; Keycloak `localhost:8081`. In the default `./demo up` mode all runtime services are containers: official `studioctl` manages native Altinn/LocalTest, while Compose manages Keycloak/portal. Native hooks reach synthetic APIs using private Docker DNS `portal:8000`. Running standalone `docker compose up` instead uses port 8000 and conflicts with native Altinn.
 
 ### Implementation map
 
@@ -81,7 +81,7 @@ This is a **target-state concept**, not a deployed system. A separate web channe
 ## 4. Security and operations boundaries
 
 - **Ports bind to 127.0.0.1**, not to a public network interface. Do not expose the demonstration directly to the Internet.
-- Tokens in the bridge are shared local bearer secrets; they are not OAuth service tokens. `start-all.sh` generates an ephemeral value and passes it to both processes.
+- Tokens in the bridge are shared local bearer secrets; they are not OAuth service tokens. `./demo up` generates an ephemeral value and provides it to the portal; a restricted config file is copied into the running Altinn container, not baked into its image.
 - The native Altinn callback verifies only a local host target and token; there is **no production mTLS, agency-issued authentication, trusted webhook signature or queue**.
 - The simulator uses a local SQLite database, synthetic identities, hard-coded demo role mappings and well-known credentials.
 - Keycloak is launched in development mode, HTTP only, with demonstration passwords. **It is not BankID or a government-accredited eID.**
@@ -108,3 +108,7 @@ See [identity and channels](IDENTITY_AND_CHANNELS.md), [integration contracts](I
 - [Altinn landscape](https://docs.altinn.studio/en/technology/architecture/altinn-landscape/)
 - [Altinn authentication](https://docs.altinn.studio/en/authorization/getting-started/authentication/)
 - [Nepal Nagarik Web procurement scope](https://bolpatra.gov.np/egp/download?alfId=cm%3ABidding_Documentsnull%2Fcm%3AY2021%2Fcm%3AM1%40%40%40%40%40cf6cc693-9187-454a-9bc7-0bcf44d42e3d&docId=66495320), section 3.2.1 (proposal, not proof of a launched web product).
+
+## Docker lifecycle and ownership
+
+The all-container default uses `./demo up` and `./demo down`. The genuine Altinn application is built by `studioctl run --mode container`, and LocalTest continues to emulate shared Altinn services. The host still needs `studioctl` as a controller, **not** a host .NET SDK. See [Docker operations](DOCKER.md) for topology, network/secret boundaries and teardown scope.
