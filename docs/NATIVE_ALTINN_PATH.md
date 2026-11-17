@@ -1,7 +1,8 @@
 # Native Altinn in this repository — state of implementation
 
-This repository now has **two distinct execution paths**, intentionally not
-misrepresented as one integrated deployment.
+This repository now has **two distinct identity and workflow paths** and an
+optional token-protected *synthetic event/data bridge* between them. That bridge
+is not a national identity federation or production Altinn Access Management.
 
 ## A. Genuine Altinn app — implemented and builds in CI
 
@@ -30,9 +31,9 @@ The .NET build and schema checks are automated in
 
 The original `docker compose up --build -d` launches the Nepal-style portal,
 Keycloak OIDC provider, simulated citizen and business records, workflow,
-delegation, officer desk, notification inbox and audit views. This is a
-**functional local simulator**, not the real Altinn platform or the native
-App above.
+delegation, officer desk, notification inbox and audit views. This is a **functional local simulator**. The native app now supports two optional
+localhost-only connections to its registry and inbox stubs, but the simulator's
+agency decisions and business delegation are not native Altinn services.
 
 This separation is visible in the portal's **Native Altinn** navigation.
 
@@ -57,7 +58,8 @@ and https://docs.altinn.studio/en/technology/architecture/altinn-landscape/.
 
 ## Government demo framing
 
-Present the **native Altinn App** to prove the technology is real and the
-**separate simulator** to illustrate the intended Nepal-specific agency
-workflow. Do not say they are integrated until the adapter and identity
-federation are actually implemented and tested.
+Present the **native Altinn App** as genuine application runtime and the
+**simulator** as Nepal agency workflow. The combined start command supports
+only synthetic DoTM prefill and one native task-event callback; it does **not**
+provide identity federation, native delegation, real agency decisions or a full
+production Altinn Platform deployment.

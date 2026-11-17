@@ -14,7 +14,7 @@ This document is deliberately precise about the word **actual**.
 | Altinn Register / Profile | LocalTest emulators | **Emulated** register/profile contracts | Synthetic Norwegian test parties |
 | Altinn Events / Notifications | LocalTest/test support varies | Not wired to Nepal notification pipeline | Incomplete |
 | NepalDoTM registry | `INepalRegistryClient` + `SyntheticNepalRegistryClient` in native Altinn code | **Synthetic adapter**, triggers native Altinn instantiation hook | No government connection |
-| Nagarik App | Legacy visual sandbox only | **Simulated** inbox, not connected to native app | No government connection |
+| Nagarik App | Visual sandbox inbox + native BPMN event webhook | **Simulated** local inbox; accepts real native app lifecycle event in combined mode | No government connection |
 | Business delegation | Legacy visual sandbox only | **Simulated** permissions in sandbox | Not native Altinn Access Management |
 
 ## What `studioctl` does
@@ -46,3 +46,12 @@ lawful cross-agency data access and infrastructure.
 **Never tell officials that the current LocalTest instance is Nepal's full,
 production-ready Altinn Platform.** This repo is instead a credible native-app
 integration proof of concept plus a separate scenario simulator.
+
+## Optional local integration, verified separately from any real government systems
+
+The native app has **genuine** Altinn `IInstantiationProcessor` and `IProcessTaskEnd`
+hooks that call synthetic DoTM and Nagarik-like APIs over localhost when started
+by `bash scripts/start-all.sh`. The HTTP contracts and webhook authentication
+are unit-tested; the CLI LocalTest runtime and the two-stack startup are tested
+in GitHub Actions. The identity populations remain separate, and this is not
+federation with NepalID or Norway's ID-porten.

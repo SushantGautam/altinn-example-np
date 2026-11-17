@@ -27,7 +27,7 @@ The separate sandbox Keycloak users cannot authenticate to the native app.
 
 **Actual:** Altinn App runtime, process, UI, form model, instantiation hook and XACML policy.
 **Emulated:** shared Altinn Storage/Authentication/Authorization/Register/Profile via LocalTest.
-**Not connected:** Nepal eID, Nagarik App, DoTM live registry, full national Altinn microservices.
+**Not connected:** real Nepal eID, the live Nagarik App, live DoTM registry, full national Altinn microservices. **Optional local bridge:** native app ↔ protected synthetic DoTM/Nagarik endpoints when both stacks run.
 See the [component-status matrix](docs/ALTINN_COMPONENT_STATUS.md).
 
 ## Start both local experiences side by side
@@ -41,8 +41,12 @@ bash scripts/start-all.sh
 - **Native Altinn App:** http://local.altinn.cloud:8000/ttd/nepal-licence/
 - **Nepal ecosystem presentation:** http://localhost:8085
 
-This launches two independent systems, *not* a federated integration between
-them. Native Altinn uses LocalTest test users; the sandbox uses Keycloak test users.
+This launches two different auth domains, *not* a federated single-sign-on system.
+However, the native Altinn App can call the synthetic DoTM registry and post an
+application task-completion event to the mock Nagarik inbox via a token-protected
+**localhost-only bridge**. Native Altinn uses LocalTest test users; the sandbox
+uses Keycloak test users. The officer and business-delegation sandboxes remain
+standalone rather than native Altinn authorization.
 Port 8085 prevents collision with the native Altinn gateway on port 8000.
 
 Stop with `bash scripts/stop-all.sh`.
@@ -50,8 +54,8 @@ Stop with `bash scripts/stop-all.sh`.
 ## Presentation sandbox — separate illustrative experience
 
 The following Docker Compose stack remains a **standalone simulator** for the
-multi-role story, not the native Altinn runtime. Its delegations, officer
-workflows and inbox are not yet connected to the native application.
+multi-role story, not the native Altinn runtime. Its delegations and officer workflow are not implemented with native Altinn;
+its inbox accepts a limited synthetic event callback from the native application when both are running.
 
 ## Start the presentation sandbox
 

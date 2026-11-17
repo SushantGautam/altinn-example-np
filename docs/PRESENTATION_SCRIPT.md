@@ -1,21 +1,26 @@
 # 12-minute live walkthrough for Nepal government
 
-**Two windows, clearly labelled**: Window A is genuine Altinn App running with
-LocalTest service emulators. Window B is the standalone Nepal ecosystem simulator.
+**Two windows, clearly labelled**: Window A is a genuine Altinn App running
+against LocalTest emulators. Window B is the Nepal ecosystem simulator. The
+combined launcher enables a narrow localhost bridge for synthetic DoTM prefill
+and an Altinn task-completion event; the identity providers are not federated.
 
 ## Window A: Actual Altinn software (6 minutes)
 
-1. Start locally with `bash scripts/start-native.sh`; open
+1. Start both windows with `bash scripts/start-all.sh`; open
    `http://local.altinn.cloud:8000`.
 2. Log in as a **LocalTest** test user. Explain that this is a stand-in for a
    future Nepal-issued government identity; not BankID and not Nagarik SSO.
 3. Open `ttd/nepal-licence` through LocalTest and show native Altinn frontend.
 4. Show the licence reference prefilled through `IInstantiationProcessor`,
    from the **synthetic** DoTM adapter in `App/logic/NepalRegistryPrefill.cs`.
+   In combined mode that adapter calls the mock DoTM HTTP endpoint at 8085.
 5. Enter a fabricated corrected address and explanation and submit the
    application. Altinn's own app runtime processes the BPMN steps, and LocalTest
    emulates the Storage/Auth/Authorization APIs.
-6. Open `App/config/process/process.bpmn` and
+6. After the data task ends, the real native `IProcessTaskEnd` can send an
+   event to the simulated Nagarik inbox. Show Asha's inbox in Window B.
+7. Open `App/config/process/process.bpmn` and
    `App/config/authorization/policy.xml` if technical staff want evidence.
 
 **Demonstrated:** genuine native app runtime/form/BPMN/policy, LocalTest contracts,
@@ -25,7 +30,8 @@ Storage/Auth/Authorization services, national delegation, real officer approval.
 ## Window B: Nepal multi-agency scenario (6 minutes)
 
 1. Run `docker compose up --build -d`; open `http://localhost:8000`.
-2. Use `asha / Demo123!`, submit a synthetic licence correction.
+2. Use `asha / Demo123!`, inspect any native Altinn event in the mock inbox,
+   then submit a separate sandbox licence correction.
 3. Switch to `maya / Demo123!` and record an approval in the **simulated**
    agency workflow.
 4. Switch back to `asha`; inspect the simulated Nagarik inbox.
@@ -35,8 +41,9 @@ Storage/Auth/Authorization services, national delegation, real officer approval.
 8. Select the **Native Altinn** tab in the simulator for the real app link.
 
 **Demonstrated:** intended service journey and tested sandbox enforcement.
-**Not demonstrated:** native Altinn delegation, actual Nepal systems, API
-interoperability between this simulator and the native app.
+**Not demonstrated:** native Altinn delegation, actual Nepal systems, or
+federated authentication. The limited synthetic DoTM prefill / task-end webhook
+is integrated over localhost in combined mode.
 
 ## Decision request
 

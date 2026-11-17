@@ -29,6 +29,7 @@ INTEGRATIONS = [
     Integration("company", "Company Registry", "mock", "SIMULATED", "Synthetic business registration and director mapping"),
     Integration("dotm", "Department of Transport Management", "mock", "SIMULATED", "Synthetic driving licence and permitting records"),
     Integration("nagarik", "Nagarik App / Inbox", "mock", "SIMULATED", "Internal notification inbox standing in for a Nagarik API"),
+    Integration("native-bridge", "Native Altinn ↔ Nepal simulation", "local", "SIMULATED", "Local native App hooks can call a synthetic DoTM HTTP stub and publish a task-completion event into the mock Nagarik inbox; only with start-all"),
     Integration("altinn", "Altinn Platform connector", "placeholder", "NOT CONNECTED", "Adapter boundary only; workflows/authorization are demo implementations, not Altinn services"),
 ]
 
