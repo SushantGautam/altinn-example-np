@@ -88,4 +88,4 @@ The latest [component status matrix](ALTINN_COMPONENT_STATUS.md), [architecture]
 
 ## Dockerized local development and demonstration
 
-`./demo up` launches all demonstration runtime services inside Docker, including the native Altinn App. Its image is built through official `studioctl run --mode container`. Docker Compose manages the separate Nepal simulator. `./demo down` stops both stacks, and `./demo clean --yes` additionally removes simulator data (LocalTest data is separate). A host .NET SDK is not needed. [Docker operations](DOCKER.md).
+`./demo up` launches all demonstration runtime services inside Docker, including the native Altinn App. Its image is built through official `studioctl run --mode container`. Docker Compose manages the Nepal simulator and the separate synthetic agency federation stack. `./demo down` stops all three environments; `./demo clean --yes` removes portal, synthetic agency and exchange audit volumes (LocalTest data is managed separately). A host .NET SDK is not needed. [Docker operations](DOCKER.md).
