@@ -1,73 +1,69 @@
-name: Containerized native Altinn probe
+name: All-Docker Altinn Nepal demonstration
 on:
   push:
     paths:
       - '.github/workflows/containerized-native.yml'
       - 'native-altinn/**'
       - 'scripts/demo.sh'
+      - 'scripts/start-all.sh'
+      - 'scripts/stop-all.sh'
+      - 'demo'
       - 'docker-compose.yml'
+      - 'identity/nepal-realm.json'
+      - 'api/**'
   workflow_dispatch:
 jobs:
-  dockerized:
+  full-stack:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Install official studioctl
+      - name: Validate shell entrypoints
+        run: |
+          bash -n demo scripts/demo.sh scripts/start-all.sh scripts/start-native.sh scripts/stop-all.sh
+          test "$(./demo help | grep -c 'all runtime services in Docker')" -eq 1
+      - name: Install official Altinn studioctl (host CLI, no host .NET SDK)
         run: |
           curl --fail --silent --show-error --location https://altinn.studio/designer/api/v1/studioctl/install.sh -o /tmp/studioctl-install.sh
           sh /tmp/studioctl-install.sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Document supported container flags
-        working-directory: native-altinn/nepal-licence
+      - name: Start every runtime component using the one-command launcher
+        run: ./demo up
+      - name: Verify actual native Altinn app and all services are containers
         run: |
-          studioctl run --help
-          studioctl app run --help || true
-      - name: Start Altinn official LocalTest emulators in containers
-        working-directory: native-altinn/nepal-licence
-        run: studioctl env up
-      - name: Run real Altinn App as a container
-        working-directory: native-altinn/nepal-licence
-        env:
-          DOTM_MOCK_REGISTRY_URL: http://portal:8000/api/stubs/dotm/licence
-          NAGARIK_DEMO_WEBHOOK_URL: http://portal:8000/api/integrations/native-altinn/events
-          NATIVE_WEBHOOK_TOKEN: ci-probe-placeholder-only
-        run: studioctl run --mode container --detach
-      - name: Inspect app container network and bridge env availability
-        run: |
-          docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' localtest-app-nepal-licence
-          if docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' localtest-app-nepal-licence | grep -q '^DOTM_MOCK_REGISTRY_URL='; then
-            echo "HOST_ENV_FORWARDED=yes"
-          else
-            echo "HOST_ENV_FORWARDED=no"
-          fi
-      - name: Check actual native Altinn app responds
-        run: |
-          docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
-          for i in $(seq 1 50); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: local.altinn.cloud" http://127.0.0.1:8000/ttd/nepal-licence/ || true)
-            if [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]; then
-              echo "Native Altinn app container route is reachable (HTTP $code)"
-              exit 0
+          docker inspect -f '{{.State.Running}}' localtest-app-nepal-licence | grep -qx true
+          docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' localtest-app-nepal-licence | grep -qx 'altinn-nepal_default'
+          docker exec --user 1000 localtest-app-nepal-licence sh -c 'test -r /tmp/altinn-nepal-bridge.json'
+          for i in $(seq 1 75); do
+            if curl -fsS http://localhost:8085/health >/dev/null && curl -fsS http://localhost:8081/realms/nepal-demo/.well-known/openid-configuration >/dev/null; then
+              break
             fi
             sleep 4
           done
-          exit 1
-      - name: Verify at least one Altinn app-specific running container
+          curl -fsS http://localhost:8085/health
+          docker exec localtest-app-nepal-licence sh -c 'wget -qO- http://portal:8000/health'
+          code=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: local.altinn.cloud" http://127.0.0.1:8000/ttd/nepal-licence/ || true)
+          [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]
+          PORTAL_BASE_URL=http://localhost:8085 python scripts/smoke_oidc.py
+      - name: Stop all runtimes via the same launcher and verify teardown
         run: |
-          studioctl env status || true
-          docker ps --format '{{.Names}} {{.Image}}'
-          docker ps --format '{{.Names}} {{.Image}}' | grep -Ei 'nepal-licence|ttd.*nepal|altinn.application'
-      - name: Diagnostics
+          ./demo down
+          if docker ps --format '{{.Names}}' | grep -E '^(localtest-|altinn-nepal-)'; then
+            echo "Demo containers remain after down"
+            exit 1
+          fi
+          if docker network inspect altinn-nepal_default >/dev/null 2>&1; then
+            echo "Demo Compose network was not removed"
+            exit 1
+          fi
+          test ! -e .demo.local.env
+          echo "PASS: all running components were Docker containers; down removed demo containers and network"
+      - name: Diagnostic logs if any step fails
         if: failure()
-        working-directory: native-altinn/nepal-licence
         run: |
-          studioctl app logs || true
-          studioctl env logs || true
+          ./demo status || true
+          ./demo logs || true
           docker ps -a || true
-      - name: Stop all official local Altinn resources
+      - name: Cleanup even after a failed run
         if: always()
-        working-directory: native-altinn/nepal-licence
-        run: |
-          studioctl stop || true
-          studioctl env down || true
+        run: ./demo down || true
