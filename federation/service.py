@@ -77,6 +77,11 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS request_nonces (
                     nonce TEXT PRIMARY KEY, created_at INTEGER NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS access_log (
+                    correlation_id TEXT NOT NULL, created_at TEXT NOT NULL,
+                    agency TEXT NOT NULL, reference TEXT NOT NULL,
+                    purpose TEXT NOT NULL, decision TEXT NOT NULL
+                );
             """)
             reference, source = AGENCIES[AGENCY]
             payload = {
@@ -180,8 +185,9 @@ def demo_token(request: Request):
         raise HTTPException(403, "Invalid local Altinn-to-exchange demo token")
 
 
-def audit(agency: str, reference: str, action: str, outcome: str, code: int, detail: str):
-    correlation_id = str(uuid.uuid4())
+def audit(agency: str, reference: str, action: str, outcome: str, code: int, detail: str,
+          correlation_id: str | None = None):
+    correlation_id = correlation_id or str(uuid.uuid4())
     with db_connection() as conn:
         conn.execute(
             "INSERT INTO exchanges VALUES(?,?,?,?,?,?,?,?)",
@@ -217,7 +223,9 @@ async def contact_agency(agency: str, reference: str, credential: str | None):
     if agency not in AGENCIES or not REF_PATTERN.fullmatch(reference):
         raise HTTPException(422, "Agency or synthetic reference is invalid")
     url = os.getenv(agency.upper() + "_EDGE_URL", f"http://{agency}-edge:8000")
-    headers = {"x-correlation-id": str(uuid.uuid4())}
+    correlation_id = str(uuid.uuid4())
+    headers = {"x-correlation-id": correlation_id,
+               "x-data-purpose": "synthetic-service-delivery"}
     if credential is not None:
         headers["Authorization"] = "Bearer " + credential
     try:
@@ -226,11 +234,13 @@ async def contact_agency(agency: str, reference: str, credential: str | None):
                 url + "/v1/records/" + reference, headers=headers
             )
     except httpx.HTTPError as error:
-        audit(agency, reference, "read", "UNAVAILABLE", 503, type(error).__name__)
+        audit(agency, reference, "read", "UNAVAILABLE", 503,
+              type(error).__name__, correlation_id)
         raise HTTPException(503, "Agency gateway is unreachable") from error
     state = "PERMITTED" if response.status_code == 200 else "DENIED"
     trace_id = audit(agency, reference, "read", state, response.status_code,
-                     "OAuth bearer token" if credential else "missing token")
+                     "OAuth bearer token" if credential else "missing token",
+                     correlation_id)
     if response.status_code != 200:
         # Gateways never return arbitrary registry content on denial.
         return {"allowed": False, "agency": agency,
@@ -380,12 +390,20 @@ if MODE == "edge":
     @app.get("/v1/records/{reference}")
     async def read_record(reference: str, request: Request):
         resource_token(request)
+        purpose = request.headers.get("x-data-purpose", "")
+        correlation_id = request.headers.get("x-correlation-id", "")
+        if purpose != "synthetic-service-delivery":
+            raise HTTPException(403, "Data access requires an approved, declared purpose")
+        try:
+            uuid.UUID(correlation_id)
+        except ValueError as error:
+            raise HTTPException(422, "Invalid cross-agency correlation ID") from error
         if not REF_PATTERN.fullmatch(reference):
             raise HTTPException(422, "Invalid synthetic record reference")
         timestamp = str(int(time.time()))
         nonce = secrets.token_hex(16)
         path = "/internal/records/" + reference
-        signing_text = f"{timestamp}:{nonce}:GET:{path}"
+        signing_text = f"{timestamp}:{nonce}:GET:{path}:{purpose}:{correlation_id}"
         secret = os.environ["INTERNAL_HMAC_SECRET"].encode()
         signature = hmac.new(secret, signing_text.encode(), hashlib.sha256).hexdigest()
         try:
@@ -393,6 +411,8 @@ if MODE == "edge":
                 result = await client.get(os.environ["RECORD_URL"] + path,
                     headers={"x-agency-timestamp": timestamp,
                              "x-agency-nonce": nonce,
+                             "x-data-purpose": purpose,
+                             "x-correlation-id": correlation_id,
                              "x-agency-signature": signature})
             if result.status_code != 200:
                 raise HTTPException(result.status_code, "Agency registry rejected the request")
@@ -417,7 +437,15 @@ if MODE == "records":
                 raise ValueError()
         except ValueError:
             raise HTTPException(401, "Expired internal request timestamp")
-        signing_text = f"{timestamp}:{nonce}:GET:/internal/records/{reference}"
+        purpose = request.headers.get("x-data-purpose", "")
+        trace_id = request.headers.get("x-correlation-id", "")
+        if purpose != "synthetic-service-delivery":
+            raise HTTPException(403, "This registry denies unapproved purposes")
+        try:
+            uuid.UUID(trace_id)
+        except ValueError as error:
+            raise HTTPException(422, "Invalid request correlation ID") from error
+        signing_text = f"{timestamp}:{nonce}:GET:/internal/records/{reference}:{purpose}:{trace_id}"
         expected = hmac.new(os.environ["INTERNAL_HMAC_SECRET"].encode(),
                             signing_text.encode(), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, signature):
@@ -431,6 +459,11 @@ if MODE == "records":
                 raise HTTPException(409, "Replayed internal service request")
             item = conn.execute("SELECT payload FROM records WHERE reference=? AND agency=?",
                                 (reference, AGENCY)).fetchone()
+            conn.execute(
+                "INSERT INTO access_log VALUES(?,?,?,?,?,?)",
+                (trace_id, utcnow(), AGENCY, reference, purpose,
+                 "PERMITTED" if item else "NOT_FOUND")
+            )
         if not item:
             raise HTTPException(404, "No record in this agency's synthetic registry")
         return json.loads(item["payload"])
