@@ -10,12 +10,14 @@ This is a maintainer checklist. A passing build does not replace source, history
 - [ ] Confirm the original contributors have authority to license all original work, and review other third-party assets and package notices.
 - [x] Inspect all 76 existing main-branch commit diffs for common private-key and service-token signatures (targeted manual/automated pattern check; no high-confidence match observed).
 - [ ] **Run a dedicated full-history secret scan**, including deleted files and all refs; review any matches for credentials, confidential correspondence, personal data and third-party material. A pattern check on diffs is not sufficient.
-- [ ] Run secret scanning (for example, Gitleaks or GitHub secret scanning) against all refs. Treat current example passwords as **public demo-only values**, never as secure defaults.
+- [ ] Run dedicated secret scanning (for example, `gitleaks git --repo-path . --log-opts=\"--all\"` with a recent Gitleaks release, or GitHub secret scanning) against all refs. Treat current example passwords as **public demo-only values**, never as secure defaults.
 - [ ] If a real secret was ever committed, revoke or rotate it before publication. Rewriting history alone does not make the secret safe.
 - [ ] Review sample datasets, Keycloak users, files and screenshots to confirm that every identity and record is synthetic and publication is authorized.
-- [ ] Confirm the native Altinn template's version and preserved attribution; record exact upstream source revision if available.
+- [x] Confirm upstream Altinn Studio repository uses MIT licensing and preserve its complete notice.
+- [ ] Record the exact upstream source revision used for the imported template, if available.
 - [ ] Review external hyperlinks, vendor/product references and government programme claims with the project stakeholders.
 - [ ] Enable private vulnerability reporting and confirm a contact route.
+- [ ] Review commit author names and email addresses: publishing existing Git history exposes author metadata, including personally identifiable addresses.
 - [ ] Verify the chosen GitHub visibility, issue and Actions permissions, branch protection and repository owner settings.
 
 ## Technical checks
