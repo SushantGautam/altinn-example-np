@@ -12,10 +12,10 @@ A simple Nepali-language opening:
 
 ## Preparation
 
-Launch the verified combined setup:
+Launch the verified all-Docker showcase. Install Docker/Compose and the official `studioctl` CLI once; no host .NET SDK is needed:
 
 ```bash
-bash scripts/start-all.sh
+./demo up
 ```
 
 Open two browser windows:
@@ -74,6 +74,8 @@ Conclude with a narrow request: one willing agency, one low-risk administrative 
 **“Are the agency records real?”** — No. Every licence, ID, company and case in this showcase is fictional.
 
 **“Can citizens use it today?”** — Not for any real government purpose. It is a demonstrator for design and evaluation.
+
+After the meeting use `./demo down` to stop all runtime containers while preserving sample records. `./demo clean --yes` additionally removes the simulator data. See [Docker operations](DOCKER.md).
 
 ## Presenter safety checklist
 
