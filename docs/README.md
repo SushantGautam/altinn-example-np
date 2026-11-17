@@ -9,6 +9,7 @@ Choose a route based on what you need. All scenarios use **made-up data**. Nothi
 | Presenter / delegation | [Presentation walkthrough](PRESENTATION_SCRIPT.md) | What to click, what to say, and what not to claim |
 | Solutions architect | [Architecture](ARCHITECTURE.md) | As-is vs future topology and trust boundaries |
 | Engineers cloning the repo | [Developer guide](DEVELOPER_GUIDE.md) | Installation, commands, routes, testing and troubleshooting |
+| Anyone launching the demo | [Docker operations](DOCKER.md) | All-container app runtime, one-command up/down, logs, persistence and cleanup |
 | Identity, Nagarik App, web channel owners | [Identity and channels](IDENTITY_AND_CHANNELS.md) | Mobile today, possible web tomorrow, identity and security |
 | Agency API integration teams | [Integration contracts](INTEGRATION_CONTRACTS.md) | Real demo endpoints and proposed future adapters |
 | Technical due diligence | [Component status](ALTINN_COMPONENT_STATUS.md) | Real / emulated / simulated / absent, with verification |
@@ -34,3 +35,7 @@ Status refers to code as checked on **17 November 2026**. Re-run GitHub Actions 
 - [Altinn: authorization capabilities](https://docs.altinn.studio/en/authorization/)
 - [Altinn: ID-provider configuration](https://docs.altinn.studio/en/altinn-studio/v8/reference/configuration/authentication/)
 - [Nepal government procurement scope for Nagarik Web](https://bolpatra.gov.np/egp/download?alfId=cm%3ABidding_Documentsnull%2Fcm%3AY2021%2Fcm%3AM1%40%40%40%40%40cf6cc693-9187-454a-9bc7-0bcf44d42e3d&docId=66495320), section 3.2.1. The document describes public services through the mobile app and a proposed standalone web application. This is evidence of **intent/scope**, not proof that a web service has launched.
+
+## Local showcase startup
+
+Run `./demo up` then `./demo down` from the repository root. All runtime services are containers; the official `studioctl` controller still runs on the host. A host .NET SDK is not required. See [Docker operations](DOCKER.md).

@@ -15,7 +15,7 @@ required = {
     "docs/ARCHITECTURE.md", "docs/IDENTITY_AND_CHANNELS.md",
     "docs/DEVELOPER_GUIDE.md", "docs/INTEGRATION_CONTRACTS.md",
     "docs/ALTINN_COMPONENT_STATUS.md", "docs/NATIVE_ALTINN_PATH.md",
-    "docs/PILOT_PLAN.md", "native-altinn/nepal-licence/README.md",
+    "docs/PILOT_PLAN.md", "docs/DOCKER.md", "native-altinn/nepal-licence/README.md",
     "native-altinn/nepal-licence/UPSTREAM.md",
 }
 for file in sorted(required):
@@ -52,3 +52,11 @@ assert "http://localhost:8085" in main and "local.altinn.cloud:8000" in main
 assert "api/stubs/dotm/licence" in (ROOT/"api/main.py").read_text()
 assert "native.altinn.task.completed" in (ROOT/"api/main.py").read_text()
 print(f"PASS: {len(required)} Markdown docs, local links and mobile/web/Altinn consistency")
+
+# Containerization invariants for the default showcase.
+launcher = (ROOT / "scripts/demo.sh").read_text()
+assert "studioctl run --mode container --detach" in launcher
+assert "docker network connect" in launcher
+assert "studioctl env down" in launcher
+assert "./demo up" in main and "./demo down" in main
+assert "No host .NET SDK" in main

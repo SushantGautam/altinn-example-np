@@ -29,16 +29,24 @@ This is an **open-for-review demonstration project**, not an official Nepal gove
 
 **Potential future:** mobile Nagarik App and an authorized Nagarik Web could share the same **identity integration, agency services, workflows and notifications**. That needs approved Nepal identity federation, legal authority, API integrations and security engineering. The browser simulator here is a **teaching aid**, not Nagarik Web.
 
-## Run everything locally
+## Run the entire showcase — all application services in Docker
 
-Prerequisites: Git, Docker with Compose v2, **.NET 10 SDK**, Python 3 for launcher, and official **`studioctl`** ([installation instructions](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/)). The repo uses Altinn Studio **v8** template dependencies; `studioctl` itself is a **preview CLI**.
+The genuine Altinn App is now also built and run as a **Docker container** with official `studioctl run --mode container`. Altinn LocalTest services, the Nepal portal, Keycloak and databases are containerized. **Host requirements:** Docker with Compose v2, Bash, Git and the [official `studioctl` preview CLI](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/). **No host .NET SDK or Python installation is required.** The CLI is a host control tool, so this is one command orchestrating two Docker environments—not a single Compose file.
 
 ```bash
 git clone https://github.com/SushantGautam/altinn-example-np.git
 cd altinn-example-np
-bash scripts/start-all.sh
+
+# After installing studioctl once
+./demo up
+./demo status
+./demo down
+
+# Optional: wipe only simulator records
+./demo clean --yes
 ```
 
+The legacy `bash scripts/start-all.sh` and `bash scripts/stop-all.sh` commands remain as wrappers. Detailed instructions: [Docker operations](docs/DOCKER.md).
 | Screen | Local URL | What it really is |
 |---|---|---|
 | Native Altinn App | http://local.altinn.cloud:8000/ttd/nepal-licence/ | Real Altinn Apps code, LocalTest platform emulation; uses **LocalTest** identities |
@@ -50,7 +58,7 @@ bash scripts/start-all.sh
 bash scripts/stop-all.sh
 ```
 
-For native Altinn only, use `bash scripts/start-native.sh` (same app at `local.altinn.cloud:8000`). For simulator only, use `docker compose up --build -d` (its web UI then uses `localhost:8000`). **Do not start both in their standalone modes simultaneously**, as both need port 8000. See [developer guide](docs/DEVELOPER_GUIDE.md).
+For native Altinn only, use `bash scripts/start-native.sh` (also container mode). For simulator only, `docker compose up --build -d` uses port 8000; **do not start both standalone modes concurrently**. See [developer guide](docs/DEVELOPER_GUIDE.md).
 
 ### Local demo accounts — simulator only
 
@@ -92,8 +100,9 @@ The government proposal is **reuse**, not replacement of the mobile Nagarik App:
 - [Native Altinn app source](native-altinn/nepal-licence/README.md): official template structure plus synthetic Nepal service.
 - [Native Altinn path](docs/NATIVE_ALTINN_PATH.md): what is necessary beyond LocalTest for a genuine national platform.
 - [API contracts](docs/INTEGRATION_CONTRACTS.md): the implemented localhost stubs and *proposed* government interfaces.
+- [Docker operations](docs/DOCKER.md): one-command startup/teardown, data persistence, bridge details and troubleshooting.
 - [Developer guide](docs/DEVELOPER_GUIDE.md): files, ports, configuration, tests, troubleshooting and security.
-- GitHub Actions: `.github/workflows/ci.yml`, `native-altinn.yml`, `native-localtest.yml`. These build the genuine app, validate configuration, exercise the simulator, start both processes and test the synthetic HTTP contracts. They **do not** yet automate a full native browser form submission through to a task-ended callback.
+- GitHub Actions: `.github/workflows/containerized-native.yml` (all-Docker launch/teardown), `ci.yml`, `native-altinn.yml`, and `native-localtest.yml` (host-process developer test). These build the genuine app, validate configuration, exercise the simulator, start both processes and test the synthetic HTTP contracts. They **do not** yet automate a full native browser form submission through to a task-ended callback.
 
 ## Safety and ownership
 
