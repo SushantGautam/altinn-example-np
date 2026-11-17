@@ -4,6 +4,21 @@
 # nor the central broker join any agency-internal data network.
 name: altinn-federation
 services:
+  pki-init:
+    image: altinn-nepal/federation:local
+    command: ["python","generate_pki.py"]
+    network_mode: "none"
+    restart: "no"
+    volumes:
+      - pki-ca-private:/pki/ca-private
+      - pki-broker:/pki/exchange-broker
+      - pki-transport-edge:/pki/transport-edge
+      - pki-civil-edge:/pki/civil-edge
+      - pki-company-edge:/pki/company-edge
+      - pki-transport-records:/pki/transport-records
+      - pki-civil-records:/pki/civil-records
+      - pki-company-records:/pki/company-records
+
   exchange-broker:
     image: altinn-nepal/federation:local
     environment:
@@ -17,14 +32,15 @@ services:
       OAUTH_AUDIENCE: interagency-api
       NATIVE_WEBHOOK_TOKEN: ${NATIVE_WEBHOOK_TOKEN:?Run through ./demo up}
       PORTAL_CALLBACK_URL: http://portal:8000/api/integrations/native-altinn/events
-      TRANSPORT_EDGE_URL: http://transport-edge:8000
-      CIVIL_EDGE_URL: http://civil-edge:8000
-      COMPANY_EDGE_URL: http://company-edge:8000
+      TRANSPORT_EDGE_URL: https://transport-edge:8000
+      CIVIL_EDGE_URL: https://civil-edge:8000
+      COMPANY_EDGE_URL: https://company-edge:8000
       DB_PATH: /state/exchange.db
     ports:
       - "127.0.0.1:8090:8000"
     volumes:
       - exchange-audit:/state
+      - pki-broker:/pki:ro
     networks:
       - presentation
       - exchange
@@ -43,10 +59,17 @@ services:
       KEYCLOAK_ISSUER: http://localhost:8081/realms/nepal-demo
       OAUTH_AUDIENCE: interagency-api
       JWKS_URL: http://exchange-broker:8000/internal/jwks
-      RECORD_URL: http://transport-records:8000
+      RECORD_URL: https://transport-records:8000
       INTERNAL_HMAC_SECRET: transport-local-connector-only-secret
+    command: ["uvicorn","service:app","--host","0.0.0.0","--port","8000","--no-access-log","--ssl-certfile","/pki/tls.crt","--ssl-keyfile","/pki/tls.key","--ssl-ca-certs","/pki/ca.crt","--ssl-cert-reqs","2"]
+    volumes:
+      - pki-transport-edge:/pki:ro
     networks: [exchange, transport-private]
-    depends_on: [transport-records]
+    depends_on:
+      transport-records:
+        condition: service_started
+      pki-init:
+        condition: service_completed_successfully
     cap_drop: [ALL]
     restart: unless-stopped
 
@@ -58,10 +81,17 @@ services:
       KEYCLOAK_ISSUER: http://localhost:8081/realms/nepal-demo
       OAUTH_AUDIENCE: interagency-api
       JWKS_URL: http://exchange-broker:8000/internal/jwks
-      RECORD_URL: http://civil-records:8000
+      RECORD_URL: https://civil-records:8000
       INTERNAL_HMAC_SECRET: civil-local-connector-only-secret
+    command: ["uvicorn","service:app","--host","0.0.0.0","--port","8000","--no-access-log","--ssl-certfile","/pki/tls.crt","--ssl-keyfile","/pki/tls.key","--ssl-ca-certs","/pki/ca.crt","--ssl-cert-reqs","2"]
+    volumes:
+      - pki-civil-edge:/pki:ro
     networks: [exchange, civil-private]
-    depends_on: [civil-records]
+    depends_on:
+      civil-records:
+        condition: service_started
+      pki-init:
+        condition: service_completed_successfully
     cap_drop: [ALL]
     restart: unless-stopped
 
@@ -73,10 +103,17 @@ services:
       KEYCLOAK_ISSUER: http://localhost:8081/realms/nepal-demo
       OAUTH_AUDIENCE: interagency-api
       JWKS_URL: http://exchange-broker:8000/internal/jwks
-      RECORD_URL: http://company-records:8000
+      RECORD_URL: https://company-records:8000
       INTERNAL_HMAC_SECRET: company-local-connector-only-secret
+    command: ["uvicorn","service:app","--host","0.0.0.0","--port","8000","--no-access-log","--ssl-certfile","/pki/tls.crt","--ssl-keyfile","/pki/tls.key","--ssl-ca-certs","/pki/ca.crt","--ssl-cert-reqs","2"]
+    volumes:
+      - pki-company-edge:/pki:ro
     networks: [exchange, company-private]
-    depends_on: [company-records]
+    depends_on:
+      company-records:
+        condition: service_started
+      pki-init:
+        condition: service_completed_successfully
     cap_drop: [ALL]
     restart: unless-stopped
 
@@ -87,8 +124,14 @@ services:
       AGENCY: transport
       DB_PATH: /state/records.db
       INTERNAL_HMAC_SECRET: transport-local-connector-only-secret
+    command: ["uvicorn","service:app","--host","0.0.0.0","--port","8000","--no-access-log","--ssl-certfile","/pki/tls.crt","--ssl-keyfile","/pki/tls.key","--ssl-ca-certs","/pki/ca.crt","--ssl-cert-reqs","2"]
     networks: [transport-private]
-    volumes: [transport-data:/state]
+    depends_on:
+      pki-init:
+        condition: service_completed_successfully
+    volumes:
+      - transport-data:/state
+      - pki-transport-records:/pki:ro
     cap_drop: [ALL]
     restart: unless-stopped
 
@@ -99,8 +142,14 @@ services:
       AGENCY: civil
       DB_PATH: /state/records.db
       INTERNAL_HMAC_SECRET: civil-local-connector-only-secret
+    command: ["uvicorn","service:app","--host","0.0.0.0","--port","8000","--no-access-log","--ssl-certfile","/pki/tls.crt","--ssl-keyfile","/pki/tls.key","--ssl-ca-certs","/pki/ca.crt","--ssl-cert-reqs","2"]
     networks: [civil-private]
-    volumes: [civil-data:/state]
+    depends_on:
+      pki-init:
+        condition: service_completed_successfully
+    volumes:
+      - civil-data:/state
+      - pki-civil-records:/pki:ro
     cap_drop: [ALL]
     restart: unless-stopped
 
@@ -111,12 +160,26 @@ services:
       AGENCY: company
       DB_PATH: /state/records.db
       INTERNAL_HMAC_SECRET: company-local-connector-only-secret
+    command: ["uvicorn","service:app","--host","0.0.0.0","--port","8000","--no-access-log","--ssl-certfile","/pki/tls.crt","--ssl-keyfile","/pki/tls.key","--ssl-ca-certs","/pki/ca.crt","--ssl-cert-reqs","2"]
     networks: [company-private]
-    volumes: [company-data:/state]
+    depends_on:
+      pki-init:
+        condition: service_completed_successfully
+    volumes:
+      - company-data:/state
+      - pki-company-records:/pki:ro
     cap_drop: [ALL]
     restart: unless-stopped
 
 volumes:
+  pki-ca-private:
+  pki-broker:
+  pki-transport-edge:
+  pki-civil-edge:
+  pki-company-edge:
+  pki-transport-records:
+  pki-civil-records:
+  pki-company-records:
   exchange-audit:
   transport-data:
   civil-data:
