@@ -15,6 +15,19 @@ from urllib.request import HTTPCookieProcessor, Request, build_opener
 BASE = "http://localhost:8000"
 
 
+class LocalDevCookieJar(CookieJar):
+    """Use the localhost HTTP secure-context exception in this CLI test only.
+
+    Browsers recognize localhost as a secure context; urllib historically does
+    not. Never use this cookie policy outside this development-only test.
+    """
+    def set_cookie(self, cookie):
+        if cookie.domain.lstrip(".").startswith("localhost"):
+            cookie.secure = False
+        return super().set_cookie(cookie)
+
+
+
 class FormParser(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -36,7 +49,7 @@ class FormParser(HTMLParser):
 
 
 def person(username):
-    opener = build_opener(HTTPCookieProcessor(CookieJar()))
+    opener = build_opener(HTTPCookieProcessor(LocalDevCookieJar()))
     login = opener.open(BASE + "/auth/login", timeout=30)
     page = login.read().decode("utf-8")
     form = FormParser()
