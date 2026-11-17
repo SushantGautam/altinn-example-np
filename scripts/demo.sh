@@ -109,8 +109,10 @@ up() {
   cd "$ROOT"
   echo "Starting Nepal presentation portal and Keycloak in Docker..."
   compose up --build -d
+  echo "Building one reusable agency exchange image for all seven isolated roles..."
+  docker build --tag altinn-nepal/federation:local "$ROOT/federation"
   echo "Starting three independently networked fictional agency registries and OAuth-protected exchange..."
-  federation up --build -d
+  federation up -d
   echo "Starting official Altinn LocalTest platform containers..."
   (cd "$APP" && studioctl env up)
   echo "Building and running the genuine Altinn application as a container..."

@@ -5,7 +5,7 @@
 name: altinn-federation
 services:
   exchange-broker:
-    build: ../../federation
+    image: altinn-nepal/federation:local
     environment:
       MODE: broker
       PYTHONDONTWRITEBYTECODE: "1"
@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
 
   transport-edge:
-    build: ../../federation
+    image: altinn-nepal/federation:local
     environment:
       MODE: edge
       AGENCY: transport
@@ -51,7 +51,7 @@ services:
     restart: unless-stopped
 
   civil-edge:
-    build: ../../federation
+    image: altinn-nepal/federation:local
     environment:
       MODE: edge
       AGENCY: civil
@@ -66,7 +66,7 @@ services:
     restart: unless-stopped
 
   company-edge:
-    build: ../../federation
+    image: altinn-nepal/federation:local
     environment:
       MODE: edge
       AGENCY: company
@@ -81,7 +81,7 @@ services:
     restart: unless-stopped
 
   transport-records:
-    build: ../../federation
+    image: altinn-nepal/federation:local
     environment:
       MODE: records
       AGENCY: transport
@@ -93,7 +93,7 @@ services:
     restart: unless-stopped
 
   civil-records:
-    build: ../../federation
+    image: altinn-nepal/federation:local
     environment:
       MODE: records
       AGENCY: civil
@@ -105,7 +105,7 @@ services:
     restart: unless-stopped
 
   company-records:
-    build: ../../federation
+    image: altinn-nepal/federation:local
     environment:
       MODE: records
       AGENCY: company
