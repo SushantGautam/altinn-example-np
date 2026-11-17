@@ -234,9 +234,11 @@ async def contact_agency(agency: str, reference: str, credential: str | None):
                 url + "/v1/records/" + reference, headers=headers
             )
     except httpx.HTTPError as error:
+        safe_error = type(error).__name__ + ": " + str(error)[:180]
         audit(agency, reference, "read", "UNAVAILABLE", 503,
-              type(error).__name__, correlation_id)
-        raise HTTPException(503, "Agency gateway is unreachable") from error
+              safe_error, correlation_id)
+        # No credentials or citizen data are included. Diagnostic-only demo.
+        raise HTTPException(503, "Agency gateway unavailable: " + safe_error) from error
     state = "PERMITTED" if response.status_code == 200 else "DENIED"
     trace_id = audit(agency, reference, "read", state, response.status_code,
                      "OAuth bearer token" if credential else "missing token",
