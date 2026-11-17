@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nepal Government | Inter-agency exchange — simulation</title>
+<style>
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1a2834;background:#f5f7fb;font-size:14px}
+*{box-sizing:border-box}body{margin:0}button{cursor:pointer}
+a{color:#176cc2;text-decoration:none}main{max-width:1250px;padding:28px 24px 60px;margin:auto}
+.top{background:#0d253b;color:#fff;padding:16px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:17px}.flag{font-size:26px}
+.hint{font-size:12px;color:#b8cadb}.pill{border:1px solid #62798a;padding:7px 10px;border-radius:99px;color:#fff;font-size:12px}
+.headline{display:flex;gap:26px;align-items:end;justify-content:space-between;margin:23px 0 18px;flex-wrap:wrap}
+h1{font-size:28px;margin:0 0 10px;letter-spacing:-.8px;line-height:1.15}h2{font-size:18px;margin:0 0 8px}h3{font-size:14px;margin:0 0 7px}
+.subtitle{color:#506174;max-width:810px;line-height:1.6;margin:0}
+.panel{border:1px solid #dce4eb;background:white;border-radius:14px;padding:21px;box-shadow:0 2px 6px #17324a08;margin:17px 0}
+.label{font-weight:700;letter-spacing:.07em;text-transform:uppercase;font-size:10px;color:#668298;margin-bottom:9px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.station{border:1px solid #dce7ef;background:#fafdff;padding:14px;border-radius:11px;min-height:112px}
+.station strong{display:block;margin:6px 0}.station small{line-height:1.5;color:#61768a}
+.station .tag{font-size:10px;display:inline-block;background:#e7effa;color:#255b83;border-radius:6px;padding:4px 7px;font-weight:700}
+.station.private{background:#f3f8fb;border-color:#a7d1da}.station.private .tag{background:#d8efed;color:#176b70}
+.station.common{background:#eef3ff;border-color:#c4d5ff}.station.common .tag{background:#d9e4ff;color:#365fba}
+.connector{text-align:center;font-size:13px;color:#748da1;padding:12px}.connector strong{background:#e8f0f8;padding:6px 12px;border-radius:20px}
+.arrows{display:flex;justify-content:space-around;color:#8094a8;font-size:17px;padding:5px}
+.notice{background:#fff8e7;border:1px solid #f5dfaa;border-radius:11px;padding:12px 15px;line-height:1.5;color:#65542d}
+.two{display:grid;grid-template-columns:1.7fr 1fr;gap:15px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:17px}
+.btn{background:#165b9e;color:#fff;border:1px solid #165b9e;border-radius:8px;font-weight:600;padding:10px 14px;font-size:13px}
+.btn:hover{background:#0e467a}.btn.secondary{color:#1f5b88;background:#fff;border-color:#9fbcd2}.btn.warning{color:#9c4429;background:#fff5f0;border:1px solid #f0cbbf}
+.statbar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:#f7fafc;padding:12px;border-radius:9px;border:1px solid #e5ecf0}
+.stat span{display:block;font-size:12px;color:#627387}.stat strong{display:block;margin-top:5px}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#1a557d}
+#result{white-space:pre-wrap;overflow-wrap:anywhere;background:#0f293d;color:#d3e9f4;border-radius:10px;min-height:130px;padding:15px;font-size:12px;line-height:1.6}
+#result code{color:inherit}table{border-collapse:collapse;width:100%;font-size:12px}td,th{text-align:left;border-bottom:1px solid #e9eef2;padding:11px 9px;vertical-align:top}th{color:#667b8f;font-size:10px;text-transform:uppercase;letter-spacing:.06em}td:last-child{font-weight:600}
+.good{color:#157459}.bad{color:#ac5528}.muted{color:#6e8092}.small{font-size:12px;color:#647787;line-height:1.6}
+.sep{margin:20px 0;border:0;border-top:1px solid #e7ebf0}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.two{grid-template-columns:1fr}main{padding:18px 12px}.top{flex-wrap:wrap}.statbar{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><span class="flag">🇳🇵</span><div>Inter-agency Digital Exchange<div class="hint">Nepal × Altinn | Isolated-network demonstration</div></div></div>
+<span class="pill">SYNTHETIC / LOCAL ONLY · NOT GOVERNMENT INFRASTRUCTURE</span></header>
+<main>
+<div class="headline"><div><div class="label">A practical cross-institution reference architecture</div><h1>One government service. Several independent institutions.</h1><p class="subtitle">See how a shared service can request only authorized information from different authorities—without giving the service direct access to their private databases.</p></div><div><a href="http://localhost:8085" class="btn secondary">Open citizen demonstration ↗</a></div></div>
+<div class="notice"><b>What is real?</b> The native Altinn App, Keycloak OAuth2 client credentials, signed JWT validation, scope-like agency role enforcement, separate Docker networks, SQLite agency ownership and retryable local outbox. <b>What is not real?</b> NepalID, actual government registries, actual Nagarik mobile App, a nationwide deployment, or independently operated Altinn national Authentication / Authorization / Storage services.</div>
+
+<section class="panel">
+<div class="label">Technical architecture explained without code</div><h2>Who can talk to whom?</h2>
+<div class="grid">
+<div class="station common"><div class="tag">CITIZEN CHANNEL</div><strong>📱 Nagarik App — mobile today</strong><small>Not connected here. A government-approved future web channel could use the same back-end interfaces.</small></div>
+<div class="station common"><div class="tag">ACTUAL ALTINN APP</div><strong>⚙ Altinn Apps .NET runtime</strong><small>Genuine forms, BPMN and XACML running against official LocalTest service emulators.</small></div>
+<div class="station common"><div class="tag">TRUST / IDENTITY</div><strong>🔑 Keycloak OIDC</strong><small>Machine-to-machine OAuth2 access tokens are signed and checked by resource gateways; all identities are fictional.</small></div>
+</div>
+<div class="connector">↓ <strong>Shared broker → agency-authorized service calls only</strong> ↓</div>
+<div class="grid">
+<div class="station"><div class="tag">SHARED EXCHANGE NETWORK</div><strong>🏛 Government exchange broker</strong><small>Obtains a machine token, selects an agency gateway, records each decision and queues events for retry.</small></div>
+<div class="station"><div class="tag">SERVICE ACCESS BOUNDARY</div><strong>🔐 Agency gateway</strong><small>Checks JWT issuer, audience, expiration and agency-specific permission. Only gateway can reach its agency data network.</small></div>
+<div class="station"><div class="tag">AUDIT & DELIVERY</div><strong>📝 Trace + durable outbox</strong><small>Each request gets a correlation ID; notification events are queued and retried if the destination is unavailable.</small></div>
+</div>
+<div class="connector">↓ <strong>Each gateway alone can enter its own internal data network</strong> ↓</div>
+<div class="grid">
+<div class="station private"><div class="tag">TRANSPORT PRIVATE NETWORK</div><strong>🚘 Department of Transport</strong><small>Own gateway + isolated mock licence database. No connection to civil or company database networks.</small></div>
+<div class="station private"><div class="tag">CIVIL PRIVATE NETWORK</div><strong>🪪 Public/civil registry</strong><small>Own gateway + isolated fake resident record store; query signing and replay detection.</small></div>
+<div class="station private"><div class="tag">COMPANY PRIVATE NETWORK</div><strong>🏢 Office of Company Registrar</strong><small>Own gateway + isolated synthetic company records. No agency publishes its data store to the host.</small></div>
+</div>
+<p class="small" style="margin-top:14px">A Docker bridge network represents a <i>logical security zone</i> here. In real government deployments, these may be different departments, cloud accounts, data centres, sites, VPN endpoints, firewalls and separately governed environments.</p>
+</section>
+
+<div class="two">
+<section class="panel">
+<div class="label">Live demonstration · fictional records only</div><h2>Ask an institution for information</h2>
+<p class="subtitle">The broker acquires a signed service token from Keycloak, the chosen agency checks authorization, and only its gateway can retrieve a record. Try a denied request to see the security boundary in action.</p>
+<div class="actions">
+<button class="btn" onclick="run('transport',false)">🚘 Read transport record</button>
+<button class="btn" onclick="run('civil',false)">🪪 Read civil record</button>
+<button class="btn" onclick="run('company',false)">🏢 Read company record</button>
+<button class="btn warning" onclick="run('transport',true)">⛔ Attempt without a token</button>
+</div>
+<div style="margin-top:16px" class="label">Result: access decision, trace ID and minimum returned fields</div>
+<pre id="result">Choose an agency above to see a live authenticated request.</pre>
+</section>
+<section class="panel">
+<div class="label">Live environment</div><h2>Network gateways</h2>
+<div id="status" class="statbar"><div class="stat">Loading…</div></div>
+<hr class="sep"/>
+<h3>How this maps to real government</h3>
+<p class="small"><b>Identity:</b> a government-approved identity federation and service registration.</p>
+<p class="small"><b>Exchange:</b> an audited API gateway or service mesh with controlled network links.</p>
+<p class="small"><b>Agency:</b> remains data controller, sets access policy and owns its data.</p>
+<p class="small"><b>Results:</b> notifications delivered to approved mobile/web channels with consent and retention rules.</p>
+</section>
+</div>
+<section class="panel">
+<div style="display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap"><div><div class="label">Government audit view · live local traces</div><h2>Which service accessed which institution?</h2><p class="small">Recorded within the exchange broker, not a production WORM audit service.</p></div><button class="btn secondary" onclick="refresh()">Refresh</button></div>
+<div style="overflow-x:auto"><table><thead><tr><th>Time (UTC)</th><th>Institution</th><th>Action</th><th>Decision</th><th>HTTP</th><th>Trace ID</th></tr></thead><tbody id="audit"><tr><td colspan="6">No requests recorded yet</td></tr></tbody></table></div>
+<h3 style="margin-top:22px">Notification outbox</h3>
+<p class="small">Altinn task events are stored before asynchronous delivery. No real Nagarik notification system is connected.</p>
+<div style="overflow-x:auto"><table><thead><tr><th>Event ID</th><th>State</th><th>Attempts</th><th>Created</th></tr></thead><tbody id="outbox"><tr><td colspan="4">No events yet</td></tr></tbody></table></div>
+</section>
+<footer class="small">Technical docs: <a href="https://github.com/SushantGautam/altinn-example-np/blob/main/docs/FEDERATION.md">Federated network design</a> · <a href="https://github.com/SushantGautam/altinn-example-np">Source repository</a>. <b>Nothing here is connected to official Nepali identity, Nagarik App or agency records.</b></footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function load(path){const r=await fetch(path,{cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.detail||"HTTP "+r.status);return d}
+async function run(agency,deny){
+  $("result").textContent="Contacting "+agency+" agency gateway…";
+  try {
+    const data=await load("/v1/demo/"+(deny?"deny":"request")+"/"+agency);
+    $("result").textContent=JSON.stringify(data,null,2);
+  }catch(e){$("result").textContent="Request failed: "+e.message}
+  refresh();
+}
+async function refresh(){
+  try{
+    const [health,history]=await Promise.all([load("/v1/status"),load("/v1/audit")]);
+    $("status").innerHTML=Object.entries(health.agencies).map(([name,state])=>'<div class="stat"><span>'+escapeHtml(name.toUpperCase())+'</span><strong class="'+(state==="online"?"good":"bad")+'">'+escapeHtml(state)+'</strong></div>').join("");
+    $("audit").innerHTML=history.exchanges.length?history.exchanges.map(x=>'<tr><td>'+escapeHtml(x.timestamp)+'</td><td>'+escapeHtml(x.agency)+'</td><td>'+escapeHtml(x.action)+'</td><td class="'+(x.outcome==="PERMITTED"?"good":"bad")+'">'+escapeHtml(x.outcome)+'</td><td>'+escapeHtml(x.code)+'</td><td><code>'+escapeHtml(x.id.slice(0,12))+'</code></td></tr>').join(""):'<tr><td colspan="6" class="muted">No queries yet. Select a demonstration above.</td></tr>';
+    $("outbox").innerHTML=history.outbox.length?history.outbox.map(x=>'<tr><td><code>'+escapeHtml(x.event_id.slice(0,55))+'</code></td><td>'+escapeHtml(x.state)+'</td><td>'+escapeHtml(x.attempts)+'</td><td>'+escapeHtml(x.created_at)+'</td></tr>').join(""):'<tr><td colspan="4" class="muted">No native Altinn task events yet</td></tr>';
+  }catch(e){$("status").textContent="Environment not ready: "+e.message}
+}
+refresh();setInterval(refresh,9000);
+</script>
+</body></html>
