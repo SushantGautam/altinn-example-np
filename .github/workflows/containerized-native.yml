@@ -66,6 +66,14 @@ jobs:
           fi
           test ! -e .demo.local.env
           echo "PASS: all running components were Docker containers; down removed demo containers and network"
+      - name: Verify explicit cleanup removes simulator state
+        run: |
+          ./demo clean --yes
+          if docker volume ls --format '{{.Name}}' | grep -Fxq 'altinn-nepal_demo-data'; then
+            echo "Demo data volume still exists after clean"
+            exit 1
+          fi
+          echo "PASS: clean --yes removed simulator data volume"
       - name: Diagnostic logs if any step fails
         if: failure()
         run: |
