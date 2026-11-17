@@ -1,0 +1,19 @@
+name: Native Altinn application checks
+on:
+  push:
+  pull_request:
+jobs:
+  native-altinn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+      - name: Verify Altinn metadata, BPMN, XACML and form bindings
+        run: python scripts/check_native.py
+      - name: Restore native Altinn packages
+        run: dotnet restore native-altinn/nepal-licence/App/App.csproj
+      - name: Build the official Altinn App .NET runtime
+        run: dotnet build native-altinn/nepal-licence/App/App.csproj --no-restore --configuration Release
