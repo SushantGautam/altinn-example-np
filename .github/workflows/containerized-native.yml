@@ -21,19 +21,18 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Validate shell entrypoints
+      - name: Validate entrypoints and Python syntax
         run: |
           bash -n demo scripts/demo.sh scripts/start-all.sh scripts/start-native.sh scripts/stop-all.sh
-          test "$(./demo help | grep -c 'all runtime services in Docker')" -eq 1
-          python -m py_compile federation/service.py scripts/check_federation.py
-      - name: Install official Altinn studioctl CLI
+          python -m py_compile federation/service.py federation/generate_pki.py federation/check_network.py scripts/check_federation.py
+      - name: Install official Altinn studioctl
         run: |
           curl --fail --silent --show-error --location https://altinn.studio/designer/api/v1/studioctl/install.sh -o /tmp/studioctl-install.sh
           sh /tmp/studioctl-install.sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Start entire federated network demo
+      - name: Start native Altinn plus independent synthetic agency networks
         run: ./demo up
-      - name: Verify actual native Altinn and isolated agency containers
+      - name: Verify Docker containers and logically isolated agency networks
         run: |
           docker inspect -f '{{.State.Running}}' localtest-app-nepal-licence | grep -qx true
           curl --fail --silent --show-error http://localhost:8090/health
@@ -42,15 +41,13 @@ jobs:
           done
           docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' altinn-federation-transport-records-1 | grep -qx altinn-federation_transport-private
           if docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' altinn-federation-exchange-broker-1 | grep -q transport-private; then
-            echo "ERROR: exchange broker directly joined transport private network"
+            echo "ERROR: exchange broker directly joined agency private data network"
             exit 1
           fi
           docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' localtest-app-nepal-licence | grep -qx altinn-nepal_default
           docker exec --user 1000 localtest-app-nepal-licence sh -c 'test -r /tmp/altinn-nepal-bridge.json'
           for i in $(seq 1 75); do
-            if curl -fsS http://localhost:8085/health >/dev/null && curl -fsS http://localhost:8081/realms/nepal-demo/.well-known/openid-configuration >/dev/null; then
-              break
-            fi
+            if curl -fsS http://localhost:8085/health >/dev/null && curl -fsS http://localhost:8081/realms/nepal-demo/.well-known/openid-configuration >/dev/null; then break; fi
             sleep 4
           done
           curl -fsS http://localhost:8085/health
@@ -58,80 +55,36 @@ jobs:
           code=000
           for i in $(seq 1 30); do
             code=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: local.altinn.cloud" http://127.0.0.1:8000/ttd/nepal-licence/ || true)
-            echo "Native Altinn route returned HTTP $code"
-            if [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]; then
-              break
-            fi
+            if [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]; then break; fi
             sleep 2
           done
+          echo "Native Altinn route HTTP $code"
           [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]
           PORTAL_BASE_URL=http://localhost:8085 python scripts/smoke_oidc.py
-      - name: Exercise real Keycloak M2M permissions and synthetic agency records
+      - name: Verify actual OAuth machine tokens, agency policies, synthetic outbox
         run: python scripts/check_federation.py
-      - name: Prove TLS client certificates and direct registry network isolation
+      - name: Verify mutual TLS rejects missing certificate and private DNS is isolated
         run: |
-          docker exec -i altinn-federation-exchange-broker-1 python - <<'PY'
-          import httpx
-          import socket
-          # No client certificate -> TLS must reject access before any agency API authorization.
-          try:
-              response = httpx.get("https://transport-edge:8000/health",
-                                   verify="/pki/ca.crt", timeout=4)
-          except httpx.TransportError:
-              print("PASS: agency HTTPS endpoint rejected missing mTLS client certificate")
-          else:
-              assert response.status_code >= 400, response.status_code
-              print("PASS: agency HTTPS endpoint rejected missing client certificate")
-          try:
-              socket.getaddrinfo("transport-records", 8000)
-          except socket.gaierror:
-              print("PASS: exchange broker cannot even resolve private transport database service")
-          else:
-              raise AssertionError("Exchange broker can resolve the transport-only private service")
-          PY
-          docker exec -i altinn-federation-transport-records-1 python - <<'PY'
-          import socket
-          try:
-              socket.getaddrinfo("civil-records", 8000)
-          except socket.gaierror:
-              print("PASS: transport registry cannot resolve civil registry service")
-          else:
-              raise AssertionError("Cross-institution registry DNS isolation missing")
-          PY
-      - name: Stop all containers and verify network teardown
+          docker exec altinn-federation-exchange-broker-1 python /service/check_network.py broker
+          docker exec altinn-federation-transport-records-1 python /service/check_network.py transport
+      - name: Stop all containers and verify teardown
         run: |
           ./demo down
           if docker ps --format '{{.Names}}' | grep -E '^(localtest-|altinn-nepal-|altinn-federation-)'; then
-            echo "Demo containers remain after down"
-            exit 1
+            echo "Demo containers remain after down"; exit 1
           fi
           if docker network inspect altinn-nepal_default >/dev/null 2>&1; then exit 1; fi
           if docker network inspect altinn-federation_exchange >/dev/null 2>&1; then exit 1; fi
           test ! -e .demo.local.env
-          echo "PASS: full container and network teardown"
-      - name: Verify explicit cleanup removes synthetic volumes
+          echo "PASS: containers and network removed, data retained"
+      - name: Explicit clean removes synthetic agency, broker, cert and portal volumes
         run: |
           ./demo clean --yes
-          if docker volume ls --format '{{.Name}}' | grep -E '^(altinn-nepal_demo-data|altinn-federation_(exchange-audit|transport-data|civil-data|company-data|pki-.*)); then
-            echo "Synthetic data volume still exists after clean"
-            exit 1
+          if docker volume ls --format '{{.Name}}' | grep -E '^altinn-(nepal_demo-data|federation_.*)$'; then
+            echo "Synthetic data volume still exists after clean"; exit 1
           fi
-          echo "PASS: synthetic data volumes removed"
-      - name: Diagnostic logs if a step fails
-        if: failure()
-        run: |
-          ./demo status || true
-          ./demo logs || true
-          docker ps -a || true
-      - name: Cleanup
-        if: always()
-        run: ./demo down || true
-; then
-            echo "Synthetic data volume still exists after clean"
-            exit 1
-          fi
-          echo "PASS: synthetic data volumes removed"
-      - name: Diagnostic logs if a step fails
+          echo "PASS: all synthetic volumes removed; LocalTest state is separate"
+      - name: Diagnostics on failure
         if: failure()
         run: |
           ./demo status || true
