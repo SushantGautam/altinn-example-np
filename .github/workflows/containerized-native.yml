@@ -28,7 +28,19 @@ jobs:
         run: studioctl env up
       - name: Run real Altinn App as a container
         working-directory: native-altinn/nepal-licence
+        env:
+          DOTM_MOCK_REGISTRY_URL: http://portal:8000/api/stubs/dotm/licence
+          NAGARIK_DEMO_WEBHOOK_URL: http://portal:8000/api/integrations/native-altinn/events
+          NATIVE_WEBHOOK_TOKEN: ci-probe-placeholder-only
         run: studioctl run --mode container --detach
+      - name: Inspect app container network and bridge env availability
+        run: |
+          docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' localtest-app-nepal-licence
+          if docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' localtest-app-nepal-licence | grep -q '^DOTM_MOCK_REGISTRY_URL='; then
+            echo "HOST_ENV_FORWARDED=yes"
+          else
+            echo "HOST_ENV_FORWARDED=no"
+          fi
       - name: Check actual native Altinn app responds
         run: |
           docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
