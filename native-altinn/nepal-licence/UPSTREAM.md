@@ -1,11 +1,17 @@
-# Upstream attribution
+# Upstream source and adaptation
 
-The native Altinn application skeleton here is adapted from
-[Altinn/altinn-studio](https://github.com/Altinn/altinn-studio),
-`src/App/template/v8/src` (retrieved November 2026). The .NET application,
-BPMN process, XACML policy, UI and metadata retain official template structure.
-Text fields and data model were adapted for a **synthetic** Nepal licence service.
+The native Altinn application scaffold was copied and adapted from the open-source
+[Altinn/altinn-studio](https://github.com/Altinn/altinn-studio) repository,
+`src/App/template/v8/src`, retrieved in November 2026.
 
-This is native Altinn app source; the platform in LocalTest is emulated, not
-the complete Norwegian production backend. Review applicable upstream license
-before redistribution or deployment.
+The upstream structure supplies the .NET Altinn Apps application scaffold, API/Core package references, BPMN, XACML policy, data-model structure, native UI/layout files, and deployment artefacts. This project adds a fictional Nepal driving-licence service, synthetic registry adapter and optional demonstration callback.
+
+**Licensing:** consult the specific upstream repository's license and any included third-party notices before redistribution or deployment. This attribution is not an assertion of Norwegian government sponsorship or approval.
+
+**Runtime truth:** this is actual Altinn App code that compiles and can be launched with official `studioctl`. Its local shared Storage/Authentication/Authorization APIs are served by **LocalTest emulators**, not a full production Altinn Platform installation.
+
+**Identity truth:** the native App uses LocalTest test identities; it is not connected to Norway's BankID or Nepal's identity infrastructure. A separate Keycloak demo exists in the repository and is **not federated** with this app.
+
+**Channels:** Nagarik App is currently discussed here as a **mobile channel**. A possible future Nagarik Web is outside this source tree. The repository's own web simulator is a presentation aid, not an official government channel.
+
+For development and provenance, use [native application readme](README.md), [component matrix](../../docs/ALTINN_COMPONENT_STATUS.md), and official [studioctl documentation](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/).
