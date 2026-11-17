@@ -1,56 +1,63 @@
-# Connecting the demonstrator to a genuine Altinn deployment
+# Native Altinn in this repository — state of implementation
 
-This document prevents a common misunderstanding: **an Altinn-inspired workflow is not the Altinn Platform.** The demo portal is deliberately independent of native Altinn while illustrating the value of its capabilities.
+This repository now has **two distinct execution paths**, intentionally not
+misrepresented as one integrated deployment.
 
-## What would constitute a genuine Altinn solution?
+## A. Genuine Altinn app — implemented and builds in CI
 
-A real Altinn-based service would execute its application using **Altinn Apps runtime**, access **Altinn Platform** storage and authorization services or approved external equivalents, and use official Altinn authentication and integration protocols. The current repository does not include those runtimes.
+Path: `native-altinn/nepal-licence/`.
 
-Per Altinn's official documentation:
-
-- Altinn Authentication delegates identity proofing to external identity providers such as Norway's ID-porten; it is not BankID itself.
-- Altinn Authorization includes distinct Access Management, Resource Registry and policy decision responsibilities.
-- Altinn LocalTest **emulates** the platform for testing an application. It is not equivalent to all national production components.
-- Altinn Studio Designer is a separate development tool, not itself the full runtime.
-
-References:
-- https://docs.altinn.studio/en/technology/architecture/altinn-landscape/
-- https://docs.altinn.studio/en/authorization/getting-started/authentication/
-- https://docs.altinn.studio/en/authorization/reference/system/components/
-- https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/
-
-## A practical integration sequence
-
-**Phase A: current interactive demonstrator.** Use this repository to demonstrate roles, federation, registries, officer decisions, delegation, event audit and a citizen inbox. This is what `docker compose up --build -d` starts.
-
-**Phase B: first native Altinn app.** Create an application in a permitted Altinn Studio environment with a data model, UI layouts and process definition for the licence-correction service. Use the official `studioctl` local development workflow and its LocalTest emulator:
+- Uses official Altinn Studio **v8** .NET application template.
+- Builds against `Altinn.App.Api` and `Altinn.App.Core` (currently 8.12.15).
+- Contains a native Altinn React form, data model, BPMN process and XACML policy.
+- Implements a real `IInstantiationProcessor` extension that calls the
+  replaceable `INepalRegistryClient` (currently synthetic DoTM record).
+- `studioctl` launches its official LocalTest environment and application
+  backend, using Altinn's app process engine and platform API contracts.
+- At runtime LocalTest **emulates** the shared Storage, Authentication,
+  Authorization, Register, Profile and related systems.
 
 ```bash
-# Inside a genuine Altinn app repository created in Altinn Studio:
-studioctl env up
-studioctl run
-# Visit http://local.altinn.cloud:8000
+bash scripts/start-native.sh
+# http://local.altinn.cloud:8000
 ```
 
-These commands are **not** supported by this repository alone; an actual generated Altinn app is required.
+The .NET build and schema checks are automated in
+`.github/workflows/native-altinn.yml`. A separate workflow,
+`native-localtest.yml`, checks actual `studioctl` startup.
 
-**Phase C: replace demonstrator adapters.** Introduce a Nepal-approved OIDC identity provider into an independently operated Altinn Authentication environment. Map Nepal's business register, party information, authorization and policy decisions; integrate DoTM and Nagarik through approved APIs. Be careful: the Norwegian Altinn deployment only accepts configured/approved identity providers, not an arbitrary issuer URL pasted into an application.
+## B. Standalone visual scenario simulator — implemented separately
 
-**Phase D: country-level infrastructure assessment.** Inventory all external Norwegian platform dependencies and services, evaluate licensing, data residency, Kubernetes, cloud services, secrets, certificate management, service-to-service identity, databases, observability, costs, runbooks, backup, reliability and support. A national rollout needs dedicated engineering and institutional ownership.
+The original `docker compose up --build -d` launches the Nepal-style portal,
+Keycloak OIDC provider, simulated citizen and business records, workflow,
+delegation, officer desk, notification inbox and audit views. This is a
+**functional local simulator**, not the real Altinn platform or the native
+App above.
 
-## Migration contract for this demo
+This separation is visible in the portal's **Native Altinn** navigation.
 
-| Demo route or module | Native equivalent to investigate |
+## C. Not yet integrated
+
+| Desired production capability | Required engineering |
 |---|---|
-| Keycloak and `/auth/*` | External national IdP + Altinn Authentication token/session |
-| `/api/delegations` | Altinn Access Management / delegation APIs |
-| `/api/cases` | Altinn Apps application runtime and Storage |
-| `/api/audit` | Platform audit/event services |
-| `/api/inbox` | Nagarik notification adapter; optionally Dialogporten-style service overview |
-| `connectors.py` | Approved national/agency registry integrations |
+| Genuine Nepal eID / BankID-like login to Altinn | Operate an approved Nepal identity provider, configure Altinn Authentication federation, identity/assurance/token mapping and legal proofing |
+| Shared Altinn Authentication microservice (not LocalTest) | Independently deploy `Altinn/altinn-authentication` and its dependencies |
+| Shared Altinn Authorization, Access Management and delegation (not LocalTest) | Deploy the relevant components and registries, define Nepal party/organization roles and access policies |
+| Shared Altinn Storage microservice (not LocalTest) | Deploy `Altinn/altinn-storage` with database/blob/queue/auth dependencies, ops and migration |
+| Nagarik App returning native cases and notifications | Approved portal API/event contract, security, callback reconciliation and user consent |
+| Live DoTM / civil / company registry adapters | Government-issued credentials, lawfully-scoped APIs, data minimization and audit |
+| Real agency approval chain | Extend BPMN with a real officer task or validated agency callbacks and permissions |
+| National observability, hosting and high availability | Kubernetes/cloud architecture, secrets, TLS, CI/CD, operations, SLAs, security assessment |
 
-Do **not** route real identity or registry data through these stub endpoints. Their entire purpose is to agree on the future interface while keeping the live government ecosystem untouched.
+The Altinn national components are not a single self-contained `studioctl`
+installation. They have multiple external Norwegian dependencies and local
+development methods. See
+https://docs.altinn.studio/en/authorization/reference/system/development-architecture/
+and https://docs.altinn.studio/en/technology/architecture/altinn-landscape/.
 
-## Decision gate for the Norwegian–Nepali team
+## Government demo framing
 
-Before promising a single-command **full Altinn Platform** deployment, demonstrate a native app on a documented local stack, identify the Altinn components that genuinely run, list all missing components, and publish test results. That claim cannot be made on the basis of the current local presentation demo.
+Present the **native Altinn App** to prove the technology is real and the
+**separate simulator** to illustrate the intended Nepal-specific agency
+workflow. Do not say they are integrated until the adapter and identity
+federation are actually implemented and tested.
