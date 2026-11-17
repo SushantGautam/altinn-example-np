@@ -40,6 +40,15 @@ AGENCIES = {
 REF_PATTERN = re.compile(r"^[A-Z][A-Z0-9-]{7,63}$")
 PERMISSIONS = {agency: "agency-" + agency + "-read" for agency in AGENCIES}
 CLIENTS = {"interagency-broker", "agency-transport-probe"}
+
+def agency_tls_client(timeout=5):
+    """Mutual-TLS transport for cross-institution calls (local demo CA)."""
+    return httpx.AsyncClient(
+        timeout=timeout,
+        verify="/pki/ca.crt",
+        cert=("/pki/tls.crt", "/pki/tls.key"),
+    )
+
 PRESENTATION_CHANNEL = "LOCAL_PRESENTATION_ONLY"
 _jwks = None
 _cached_token = ""
@@ -212,7 +221,7 @@ async def contact_agency(agency: str, reference: str, credential: str | None):
     if credential is not None:
         headers["Authorization"] = "Bearer " + credential
     try:
-        async with httpx.AsyncClient(timeout=5) as client:
+        async with agency_tls_client(timeout=5) as client:
             response = await client.get(
                 url + "/v1/records/" + reference, headers=headers
             )
@@ -263,7 +272,7 @@ if MODE == "broker":
     @app.get("/v1/status")
     async def statuses():
         result = {}
-        async with httpx.AsyncClient(timeout=2) as client:
+        async with agency_tls_client(timeout=2) as client:
             for agency in AGENCIES:
                 try:
                     url = os.environ.get(agency.upper() + "_EDGE_URL", f"http://{agency}-edge:8000")
@@ -380,7 +389,7 @@ if MODE == "edge":
         secret = os.environ["INTERNAL_HMAC_SECRET"].encode()
         signature = hmac.new(secret, signing_text.encode(), hashlib.sha256).hexdigest()
         try:
-            async with httpx.AsyncClient(timeout=3) as client:
+            async with agency_tls_client(timeout=3) as client:
                 result = await client.get(os.environ["RECORD_URL"] + path,
                     headers={"x-agency-timestamp": timestamp,
                              "x-agency-nonce": nonce,
