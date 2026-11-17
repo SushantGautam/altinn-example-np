@@ -6,8 +6,10 @@ This is a maintainer checklist. A passing build does not replace source, history
 
 ## Must complete
 
-- [ ] **Choose a project license and add its full text.** Confirm the project's original contributors can grant it. Retain the upstream Altinn Studio template license and any required notices; confirm third-party assets and dependencies separately.
-- [ ] **Review the entire Git history**, including deleted files, for secrets, keys, private credentials, personal data, confidential government correspondence and third-party material. Scanning the current working tree alone is not sufficient.
+- [x] Add a proposed MIT project license and preserve the Altinn Studio license in `THIRD_PARTY_NOTICES.md`.
+- [ ] Confirm the original contributors have authority to license all original work, and review other third-party assets and package notices.
+- [x] Inspect all 76 existing main-branch commit diffs for common private-key and service-token signatures (targeted manual/automated pattern check; no high-confidence match observed).
+- [ ] **Run a dedicated full-history secret scan**, including deleted files and all refs; review any matches for credentials, confidential correspondence, personal data and third-party material. A pattern check on diffs is not sufficient.
 - [ ] Run secret scanning (for example, Gitleaks or GitHub secret scanning) against all refs. Treat current example passwords as **public demo-only values**, never as secure defaults.
 - [ ] If a real secret was ever committed, revoke or rotate it before publication. Rewriting history alone does not make the secret safe.
 - [ ] Review sample datasets, Keycloak users, files and screenshots to confirm that every identity and record is synthetic and publication is authorized.
@@ -23,7 +25,8 @@ This is a maintainer checklist. A passing build does not replace source, history
 - [ ] Run a native Altinn browser submission through the configured BPMN process and verify the resulting test event. Until automated, keep this limitation visible.
 - [ ] Confirm that the local federation services are not unintentionally reachable from public interfaces.
 - [ ] Recheck Docker images and dependency versions for known vulnerabilities.
-- [ ] Validate that private keys, temporary certificates, local SQLite databases and `.env` files are excluded from commits.
+- [x] Add a tracked-file release hygiene check to CI for private keys, common tokens and generated credentials.
+- [ ] Validate that private keys, temporary certificates, local SQLite databases and `.env` files are excluded from all refs and release archives.
 - [ ] Ensure that all use of local tokens and HMAC checks is identified as demonstration-only.
 
 ## Editorial and stakeholder review
