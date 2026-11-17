@@ -10,7 +10,7 @@ Path: [`native-altinn/nepal-licence`](../native-altinn/nepal-licence/README.md).
 - Altinn UI layout, data model, BPMN application process with data task and PDF step, and XACML policy for `ttd/nepal-licence`.
 - Genuine `IInstantiationProcessor` extension calls a synthetic registry adapter.
 - Genuine `IProcessTaskEnd` extension can emit a synthetic, minimal task event.
-- Official `studioctl env up` runs **LocalTest emulators**, and `studioctl run` runs the actual application runtime.
+- Official `studioctl env up` runs **containerized LocalTest emulators**; the default `studioctl run --mode container --detach` builds and runs the genuine Altinn App as a Docker container. The controller CLI remains on the host.
 - Native CI compiles app and checks configuration; LocalTest CI starts app, verifies route, and tests bridge contracts.
 
 ```bash
@@ -19,7 +19,7 @@ bash scripts/start-native.sh
 ```
 
 ```bash
-bash scripts/start-all.sh
+./demo up
 # native Altinn :8000 and separate Nepal simulator :8085
 ```
 
@@ -85,3 +85,7 @@ The latest [component status matrix](ALTINN_COMPONENT_STATUS.md), [architecture]
 - [Altinn Authorization](https://docs.altinn.studio/en/authorization/)
 - [Altinn architecture](https://docs.altinn.studio/en/technology/architecture/altinn-landscape/)
 - [Altinn app-localtest source](https://github.com/Altinn/app-localtest)
+
+## Dockerized local development and demonstration
+
+`./demo up` launches all demonstration runtime services inside Docker, including the native Altinn App. Its image is built through official `studioctl run --mode container`. Docker Compose manages the separate Nepal simulator. `./demo down` stops both stacks, and `./demo clean --yes` additionally removes simulator data (LocalTest data is separate). A host .NET SDK is not needed. [Docker operations](DOCKER.md).
