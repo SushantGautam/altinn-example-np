@@ -5,6 +5,7 @@ on:
       - '.github/workflows/containerized-native.yml'
       - 'native-altinn/**'
       - 'scripts/demo.sh'
+      - 'scripts/check_federation.py'
       - 'scripts/start-all.sh'
       - 'scripts/stop-all.sh'
       - 'demo'
@@ -12,9 +13,7 @@ on:
       - 'identity/nepal-realm.json'
       - 'api/**'
       - 'federation/**'
-      - 'scripts/check_federation.py'
       - 'infra/federation/**'
-      - 'identity/nepal-realm.json'
   workflow_dispatch:
 jobs:
   full-stack:
@@ -26,26 +25,27 @@ jobs:
         run: |
           bash -n demo scripts/demo.sh scripts/start-all.sh scripts/start-native.sh scripts/stop-all.sh
           test "$(./demo help | grep -c 'all runtime services in Docker')" -eq 1
-      - name: Install official Altinn studioctl (host CLI, no host .NET SDK)
+          python -m py_compile federation/service.py scripts/check_federation.py
+      - name: Install official Altinn studioctl CLI
         run: |
           curl --fail --silent --show-error --location https://altinn.studio/designer/api/v1/studioctl/install.sh -o /tmp/studioctl-install.sh
           sh /tmp/studioctl-install.sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Start every runtime component using the one-command launcher
+      - name: Start entire federated network demo
         run: ./demo up
-      - name: Verify actual native Altinn app and all services are containers
+      - name: Verify actual native Altinn and isolated agency containers
         run: |
           docker inspect -f '{{.State.Running}}' localtest-app-nepal-licence | grep -qx true
-          curl -fsS http://localhost:8090/health
+          curl --fail --silent --show-error http://localhost:8090/health
           for service in transport-edge civil-edge company-edge transport-records civil-records company-records; do
-            docker inspect -f '{{.State.Running}}' "altinn-federation-${service}-1" | grep -qx true
+            docker inspect -f '{{.State.Running}}' "altinn-federation-$service-1" | grep -qx true
           done
           docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' altinn-federation-transport-records-1 | grep -qx altinn-federation_transport-private
-          if docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' altinn-federation-exchange-broker-1 | grep -q 'transport-private'; then
-            echo "ERROR: exchange broker directly joined transport private registry network"
+          if docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' altinn-federation-exchange-broker-1 | grep -q transport-private; then
+            echo "ERROR: exchange broker directly joined transport private network"
             exit 1
           fi
-          docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' localtest-app-nepal-licence | grep -qx 'altinn-nepal_default'
+          docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' localtest-app-nepal-licence | grep -qx altinn-nepal_default
           docker exec --user 1000 localtest-app-nepal-licence sh -c 'test -r /tmp/altinn-nepal-bridge.json'
           for i in $(seq 1 75); do
             if curl -fsS http://localhost:8085/health >/dev/null && curl -fsS http://localhost:8081/realms/nepal-demo/.well-known/openid-configuration >/dev/null; then
@@ -54,7 +54,7 @@ jobs:
             sleep 4
           done
           curl -fsS http://localhost:8085/health
-          docker exec localtest-app-nepal-licence sh -c 'wget -qO- http://portal:8000/health'
+          docker exec localtest-app-nepal-licence sh -c 'wget -qO- http://exchange-broker:8000/health'
           code=000
           for i in $(seq 1 30); do
             code=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: local.altinn.cloud" http://127.0.0.1:8000/ttd/nepal-licence/ || true)
@@ -66,54 +66,33 @@ jobs:
           done
           [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]
           PORTAL_BASE_URL=http://localhost:8085 python scripts/smoke_oidc.py
-      - name: Verify real machine-to-machine OAuth and least-privilege agency boundaries
-        run: |
-          python scripts/check_federation.py
-      - name: Stop all runtimes via the same launcher and verify teardown
+      - name: Exercise real Keycloak M2M permissions and synthetic agency records
+        run: python scripts/check_federation.py
+      - name: Stop all containers and verify network teardown
         run: |
           ./demo down
-          if docker ps --format '{{.Names}}' | grep -E '^(localtest-|altinn-nepal-)'; then
+          if docker ps --format '{{.Names}}' | grep -E '^(localtest-|altinn-nepal-|altinn-federation-)'; then
             echo "Demo containers remain after down"
             exit 1
           fi
-          if docker ps --format '{{.Names}}' | grep -E '^altinn-federation-'; then
-            echo "Federated agency containers remain after down"
-            exit 1
-          fi
-          if docker network inspect altinn-federation_exchange >/dev/null 2>&1; then
-            echo "Cross-agency exchange network remains after down"
-            exit 1
-          fi
-          if docker network inspect altinn-nepal_default >/dev/null 2>&1; then
-            echo "Demo Compose network was not removed"
-            exit 1
-          fi
+          if docker network inspect altinn-nepal_default >/dev/null 2>&1; then exit 1; fi
+          if docker network inspect altinn-federation_exchange >/dev/null 2>&1; then exit 1; fi
           test ! -e .demo.local.env
-          echo "PASS: all running components were Docker containers; down removed demo containers and network"
-      - name: Verify explicit cleanup removes simulator state
+          echo "PASS: full container and network teardown"
+      - name: Verify explicit cleanup removes synthetic volumes
         run: |
           ./demo clean --yes
-          if docker volume ls --format '{{.Name}}' | grep -E '^(altinn-nepal_demo-data|altinn-federation_(exchange-audit|transport-data|civil-data|company-data))
-      - name: Diagnostic logs if any step fails
-        if: failure()
-        run: |
-          ./demo status || true
-          ./demo logs || true
-          docker ps -a || true
-      - name: Cleanup even after a failed run
-        if: always()
-        run: ./demo down || true
-; then
-            echo "A synthetic data volume still exists after clean"
+          if docker volume ls --format '{{.Name}}' | grep -E '^(altinn-nepal_demo-data|altinn-federation_(exchange-audit|transport-data|civil-data|company-data))$'; then
+            echo "Synthetic data volume still exists after clean"
             exit 1
           fi
-          echo "PASS: clean --yes removed simulator and independent agency data volumes"
-      - name: Diagnostic logs if any step fails
+          echo "PASS: synthetic data volumes removed"
+      - name: Diagnostic logs if a step fails
         if: failure()
         run: |
           ./demo status || true
           ./demo logs || true
           docker ps -a || true
-      - name: Cleanup even after a failed run
+      - name: Cleanup
         if: always()
         run: ./demo down || true
