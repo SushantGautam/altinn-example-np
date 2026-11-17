@@ -57,12 +57,12 @@ internal static class LocalDemoBridge
 
         if (string.IsNullOrWhiteSpace(token) || !Uri.TryCreate(target, UriKind.Absolute, out var candidate)
             || candidate.Scheme != Uri.UriSchemeHttp
-            || candidate.Host is not ("localhost" or "127.0.0.1" or "portal"))
+            || candidate.Host is not ("localhost" or "127.0.0.1" or "portal" or "exchange-broker"))
         {
             return false;
         }
 
-        // "portal" is resolvable only inside the isolated demo Docker network.
+        // "portal" and "exchange-broker" are only resolvable on the local demo Docker network.
         // This is deliberately not a generic or production connector.
         endpoint = candidate;
         return true;
