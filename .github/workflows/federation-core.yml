@@ -1,0 +1,46 @@
+name: Federated agencies and mTLS
+on:
+  push:
+    paths:
+      - '.github/workflows/federation-core.yml'
+      - 'federation/**'
+      - 'infra/federation/**'
+      - 'identity/nepal-realm.json'
+      - 'scripts/check_federation.py'
+  workflow_dispatch:
+jobs:
+  federation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create synthetic demo token
+        run: |
+          token=$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')
+          (umask 077; printf 'PORTAL_PORT=8085\nPORTAL_BASE_URL=http://localhost:8085\nNATIVE_WEBHOOK_TOKEN=%s\n' "$token" > .demo.local.env)
+      - name: Start Keycloak and Nepal web simulator
+        run: docker compose --project-name altinn-nepal --env-file .demo.local.env up --build -d
+      - name: Build one federated agency image
+        run: docker build --tag altinn-nepal/federation:local federation
+      - name: Start isolated agencies, mTLS PKI and broker
+        run: |
+          docker compose --project-name altinn-federation --env-file .demo.local.env --file infra/federation/compose.yml up -d
+          docker inspect -f '{{.State.ExitCode}}' altinn-federation-pki-init-1 | grep -qx 0
+      - name: Verify real OAuth machine tokens, mTLS, private records and retry outbox
+        run: |
+          python scripts/check_federation.py
+          docker exec altinn-federation-exchange-broker-1 python /service/check_network.py broker
+          docker exec altinn-federation-transport-records-1 python /service/check_network.py transport
+          docker exec altinn-federation-exchange-broker-1 sh -c 'test ! -f /pki/ca.key'
+      - name: Failure diagnostics
+        if: failure()
+        run: |
+          docker compose --project-name altinn-federation --env-file .demo.local.env --file infra/federation/compose.yml logs --tail 80 || true
+          docker compose --project-name altinn-nepal --env-file .demo.local.env logs --tail 45 || true
+          docker ps -a || true
+      - name: Cleanup synthetic environments
+        if: always()
+        run: |
+          docker compose --project-name altinn-federation --env-file .demo.local.env --file infra/federation/compose.yml down -v || true
+          docker compose --project-name altinn-nepal --env-file .demo.local.env down -v || true
+          rm -f .demo.local.env
