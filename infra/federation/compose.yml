@@ -1,0 +1,136 @@
+# Separate governmental networks are SIMULATED by isolated Docker bridges.
+# This file is managed through ./demo up after the portal/Keycloak stack starts.
+# No registry service has a host-published port, and neither exchange gateways
+# nor the central broker join any agency-internal data network.
+name: altinn-federation
+services:
+  exchange-broker:
+    build: ../../federation
+    environment:
+      MODE: broker
+      PYTHONDONTWRITEBYTECODE: "1"
+      KEYCLOAK_TOKEN_URL: http://identity:8080/realms/nepal-demo/protocol/openid-connect/token
+      KEYCLOAK_JWKS_URL: http://identity:8080/realms/nepal-demo/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER: http://localhost:8081/realms/nepal-demo
+      OAUTH_CLIENT_ID: interagency-broker
+      OAUTH_CLIENT_SECRET: broker-local-example-secret-change-me
+      OAUTH_AUDIENCE: interagency-api
+      NATIVE_WEBHOOK_TOKEN: ${NATIVE_WEBHOOK_TOKEN:?Run through ./demo up}
+      PORTAL_CALLBACK_URL: http://portal:8000/api/integrations/native-altinn/events
+      TRANSPORT_EDGE_URL: http://transport-edge:8000
+      CIVIL_EDGE_URL: http://civil-edge:8000
+      COMPANY_EDGE_URL: http://company-edge:8000
+      DB_PATH: /state/exchange.db
+    ports:
+      - "127.0.0.1:8090:8000"
+    volumes:
+      - exchange-audit:/state
+    networks:
+      - presentation
+      - exchange
+    depends_on:
+      - transport-edge
+      - civil-edge
+      - company-edge
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  transport-edge:
+    build: ../../federation
+    environment:
+      MODE: edge
+      AGENCY: transport
+      KEYCLOAK_ISSUER: http://localhost:8081/realms/nepal-demo
+      OAUTH_AUDIENCE: interagency-api
+      JWKS_URL: http://exchange-broker:8000/internal/jwks
+      RECORD_URL: http://transport-records:8000
+      INTERNAL_HMAC_SECRET: transport-local-connector-only-secret
+    networks: [exchange, transport-private]
+    depends_on: [transport-records]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  civil-edge:
+    build: ../../federation
+    environment:
+      MODE: edge
+      AGENCY: civil
+      KEYCLOAK_ISSUER: http://localhost:8081/realms/nepal-demo
+      OAUTH_AUDIENCE: interagency-api
+      JWKS_URL: http://exchange-broker:8000/internal/jwks
+      RECORD_URL: http://civil-records:8000
+      INTERNAL_HMAC_SECRET: civil-local-connector-only-secret
+    networks: [exchange, civil-private]
+    depends_on: [civil-records]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  company-edge:
+    build: ../../federation
+    environment:
+      MODE: edge
+      AGENCY: company
+      KEYCLOAK_ISSUER: http://localhost:8081/realms/nepal-demo
+      OAUTH_AUDIENCE: interagency-api
+      JWKS_URL: http://exchange-broker:8000/internal/jwks
+      RECORD_URL: http://company-records:8000
+      INTERNAL_HMAC_SECRET: company-local-connector-only-secret
+    networks: [exchange, company-private]
+    depends_on: [company-records]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  transport-records:
+    build: ../../federation
+    environment:
+      MODE: records
+      AGENCY: transport
+      DB_PATH: /state/records.db
+      INTERNAL_HMAC_SECRET: transport-local-connector-only-secret
+    networks: [transport-private]
+    volumes: [transport-data:/state]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  civil-records:
+    build: ../../federation
+    environment:
+      MODE: records
+      AGENCY: civil
+      DB_PATH: /state/records.db
+      INTERNAL_HMAC_SECRET: civil-local-connector-only-secret
+    networks: [civil-private]
+    volumes: [civil-data:/state]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  company-records:
+    build: ../../federation
+    environment:
+      MODE: records
+      AGENCY: company
+      DB_PATH: /state/records.db
+      INTERNAL_HMAC_SECRET: company-local-connector-only-secret
+    networks: [company-private]
+    volumes: [company-data:/state]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+volumes:
+  exchange-audit:
+  transport-data:
+  civil-data:
+  company-data:
+
+networks:
+  presentation:
+    name: altinn-nepal_default
+    external: true
+  exchange:
+    internal: true
+  transport-private:
+    internal: true
+  civil-private:
+    internal: true
+  company-private:
+    internal: true

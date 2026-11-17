@@ -27,6 +27,62 @@
       "attributes": {
         "pkce.code.challenge.method": "S256"
       }
+    },
+    {
+      "clientId": "interagency-api",
+      "name": "Federated agency API resource audience",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "bearerOnly": true,
+      "publicClient": false
+    },
+    {
+      "clientId": "interagency-broker",
+      "name": "Government data exchange broker (synthetic M2M)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "broker-local-example-secret-change-me",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": true,
+      "protocolMappers": [
+        {
+          "name": "agency-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "interagency-api",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "agency-transport-probe",
+      "name": "Limited transport-only test client",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "transport-local-example-secret-change-me",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": true,
+      "protocolMappers": [
+        {
+          "name": "agency-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "interagency-api",
+            "access.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "users": [
@@ -104,6 +160,44 @@
           "temporary": false
         }
       ]
+    },
+    {
+      "username": "service-account-interagency-broker",
+      "enabled": true,
+      "serviceAccountClientId": "interagency-broker",
+      "realmRoles": [
+        "agency-transport-read",
+        "agency-civil-read",
+        "agency-company-read"
+      ]
+    },
+    {
+      "username": "service-account-agency-transport-probe",
+      "enabled": true,
+      "serviceAccountClientId": "agency-transport-probe",
+      "realmRoles": [
+        "agency-transport-read"
+      ]
     }
-  ]
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "agency-transport-read",
+        "description": "Fictional cross-agency resource permission; no governmental authority"
+      },
+      {
+        "name": "agency-civil-read",
+        "description": "Fictional cross-agency resource permission; no governmental authority"
+      },
+      {
+        "name": "agency-company-read",
+        "description": "Fictional cross-agency resource permission; no governmental authority"
+      },
+      {
+        "name": "agency-transport-write",
+        "description": "Fictional cross-agency resource permission; no governmental authority"
+      }
+    ]
+  }
 }
