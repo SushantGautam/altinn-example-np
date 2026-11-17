@@ -68,6 +68,36 @@ jobs:
           PORTAL_BASE_URL=http://localhost:8085 python scripts/smoke_oidc.py
       - name: Exercise real Keycloak M2M permissions and synthetic agency records
         run: python scripts/check_federation.py
+      - name: Prove TLS client certificates and direct registry network isolation
+        run: |
+          docker exec -i altinn-federation-exchange-broker-1 python - <<'PY'
+          import httpx
+          import socket
+          # No client certificate -> TLS must reject access before any agency API authorization.
+          try:
+              response = httpx.get("https://transport-edge:8000/health",
+                                   verify="/pki/ca.crt", timeout=4)
+          except httpx.TransportError:
+              print("PASS: agency HTTPS endpoint rejected missing mTLS client certificate")
+          else:
+              assert response.status_code >= 400, response.status_code
+              print("PASS: agency HTTPS endpoint rejected missing client certificate")
+          try:
+              socket.getaddrinfo("transport-records", 8000)
+          except socket.gaierror:
+              print("PASS: exchange broker cannot even resolve private transport database service")
+          else:
+              raise AssertionError("Exchange broker can resolve the transport-only private service")
+          PY
+          docker exec -i altinn-federation-transport-records-1 python - <<'PY'
+          import socket
+          try:
+              socket.getaddrinfo("civil-records", 8000)
+          except socket.gaierror:
+              print("PASS: transport registry cannot resolve civil registry service")
+          else:
+              raise AssertionError("Cross-institution registry DNS isolation missing")
+          PY
       - name: Stop all containers and verify network teardown
         run: |
           ./demo down
@@ -82,7 +112,21 @@ jobs:
       - name: Verify explicit cleanup removes synthetic volumes
         run: |
           ./demo clean --yes
-          if docker volume ls --format '{{.Name}}' | grep -E '^(altinn-nepal_demo-data|altinn-federation_(exchange-audit|transport-data|civil-data|company-data))$'; then
+          if docker volume ls --format '{{.Name}}' | grep -E '^(altinn-nepal_demo-data|altinn-federation_(exchange-audit|transport-data|civil-data|company-data|pki-.*)); then
+            echo "Synthetic data volume still exists after clean"
+            exit 1
+          fi
+          echo "PASS: synthetic data volumes removed"
+      - name: Diagnostic logs if a step fails
+        if: failure()
+        run: |
+          ./demo status || true
+          ./demo logs || true
+          docker ps -a || true
+      - name: Cleanup
+        if: always()
+        run: ./demo down || true
+; then
             echo "Synthetic data volume still exists after clean"
             exit 1
           fi
