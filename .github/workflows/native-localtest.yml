@@ -1,0 +1,57 @@
+name: Native Altinn LocalTest smoke
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'native-altinn/**'
+      - 'scripts/start-native.sh'
+      - '.github/workflows/native-localtest.yml'
+jobs:
+  localtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.401'
+      - name: Install official studioctl preview
+        run: |
+          curl --fail --silent --show-error --location https://altinn.studio/designer/api/v1/studioctl/install.sh -o /tmp/install-studioctl.sh
+          sh /tmp/install-studioctl.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Identify installed CLI
+        run: |
+          command -v studioctl || find "$HOME" -type f -name studioctl | head
+          studioctl --help
+      - name: Start official LocalTest platform
+        working-directory: native-altinn/nepal-licence
+        run: studioctl env up
+      - name: Start actual Altinn App runtime
+        working-directory: native-altinn/nepal-licence
+        run: studioctl run --detach
+      - name: Check the app is reachable through LocalTest
+        run: |
+          for i in $(seq 1 45); do
+            code=$(curl --silent --output /tmp/altinn-response --write-out "%{http_code}" --header "Host: local.altinn.cloud" http://127.0.0.1:8000/ || true)
+            if [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]; then
+              echo "Native Altinn gateway responds: HTTP $code"
+              exit 0
+            fi
+            sleep 4
+          done
+          echo "LocalTest gateway did not become reachable"
+          exit 1
+      - name: Diagnostics on failure
+        if: failure()
+        working-directory: native-altinn/nepal-licence
+        run: |
+          studioctl env status || true
+          studioctl app logs || true
+          studioctl env logs || true
+      - name: Stop native app
+        if: always()
+        working-directory: native-altinn/nepal-licence
+        run: |
+          studioctl stop || true
+          studioctl env down || true
