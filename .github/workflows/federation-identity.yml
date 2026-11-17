@@ -1,0 +1,47 @@
+name: Federated identity smoke
+on:
+  push:
+    paths:
+      - '.github/workflows/federation-identity.yml'
+      - 'identity/nepal-realm.json'
+  workflow_dispatch:
+jobs:
+  keycloak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start actual Keycloak identity container
+        run: docker compose up -d identity
+      - name: Check OAuth service-account access tokens contain agency permissions
+        run: |
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:8081/realms/nepal-demo/.well-known/openid-configuration >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          python - <<'PY'
+          import base64,json,time,urllib.parse,urllib.request
+          url="http://localhost:8081/realms/nepal-demo/protocol/openid-connect/token"
+          for cid,secret,roles in [
+              ("interagency-broker","broker-local-example-secret-change-me",["agency-transport-read","agency-civil-read","agency-company-read"]),
+              ("agency-transport-probe","transport-local-example-secret-change-me",["agency-transport-read"]),
+          ]:
+              data=urllib.parse.urlencode({"grant_type":"client_credentials","client_id":cid,"client_secret":secret}).encode()
+              resp=json.load(urllib.request.urlopen(urllib.request.Request(url,data=data),timeout=15))
+              access=resp["access_token"].split(".")[1]
+              payload=json.loads(base64.urlsafe_b64decode(access+"="*(-len(access)%4)))
+              r=set(payload.get("realm_access",{}).get("roles",[]))
+              audiences=payload.get("aud",[])
+              if isinstance(audiences,str): audiences=[audiences]
+              print(cid,{"roles":sorted(r),"audiences":audiences,"issuer":payload["iss"]})
+              assert set(roles)<=r,("missing roles",cid,r)
+              assert "interagency-api" in audiences,("missing audience",cid,audiences)
+              assert payload["iss"]=="http://localhost:8081/realms/nepal-demo"
+          print("PASS: real Keycloak client-credentials identity and per-client agency permissions")
+          PY
+      - name: Inspect realm startup logs if failure
+        if: failure()
+        run: docker compose logs identity --tail 100
+      - name: Teardown
+        if: always()
+        run: docker compose down -v
