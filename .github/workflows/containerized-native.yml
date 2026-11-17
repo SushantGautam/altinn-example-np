@@ -11,6 +11,9 @@ on:
       - 'docker-compose.yml'
       - 'identity/nepal-realm.json'
       - 'api/**'
+      - 'federation/**'
+      - 'infra/federation/**'
+      - 'identity/nepal-realm.json'
   workflow_dispatch:
 jobs:
   full-stack:
@@ -32,6 +35,15 @@ jobs:
       - name: Verify actual native Altinn app and all services are containers
         run: |
           docker inspect -f '{{.State.Running}}' localtest-app-nepal-licence | grep -qx true
+          curl -fsS http://localhost:8090/health
+          for service in transport-edge civil-edge company-edge transport-records civil-records company-records; do
+            docker inspect -f '{{.State.Running}}' "altinn-federation-${service}-1" | grep -qx true
+          done
+          docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' altinn-federation-transport-records-1 | grep -qx altinn-federation_transport-private
+          if docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' altinn-federation-exchange-broker-1 | grep -q 'transport-private'; then
+            echo "ERROR: exchange broker directly joined transport private registry network"
+            exit 1
+          fi
           docker inspect -f '{{range $n, $_ := .NetworkSettings.Networks}}{{println $n}}{{end}}' localtest-app-nepal-licence | grep -qx 'altinn-nepal_default'
           docker exec --user 1000 localtest-app-nepal-licence sh -c 'test -r /tmp/altinn-nepal-bridge.json'
           for i in $(seq 1 75); do
@@ -53,11 +65,22 @@ jobs:
           done
           [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]
           PORTAL_BASE_URL=http://localhost:8085 python scripts/smoke_oidc.py
+      - name: Verify real machine-to-machine OAuth and least-privilege agency boundaries
+        run: |
+          python scripts/check_federation.py
       - name: Stop all runtimes via the same launcher and verify teardown
         run: |
           ./demo down
           if docker ps --format '{{.Names}}' | grep -E '^(localtest-|altinn-nepal-)'; then
             echo "Demo containers remain after down"
+            exit 1
+          fi
+          if docker ps --format '{{.Names}}' | grep -E '^altinn-federation-'; then
+            echo "Federated agency containers remain after down"
+            exit 1
+          fi
+          if docker network inspect altinn-federation_exchange >/dev/null 2>&1; then
+            echo "Cross-agency exchange network remains after down"
             exit 1
           fi
           if docker network inspect altinn-nepal_default >/dev/null 2>&1; then
@@ -69,11 +92,21 @@ jobs:
       - name: Verify explicit cleanup removes simulator state
         run: |
           ./demo clean --yes
-          if docker volume ls --format '{{.Name}}' | grep -Fxq 'altinn-nepal_demo-data'; then
-            echo "Demo data volume still exists after clean"
+          if docker volume ls --format '{{.Name}}' | grep -E '^(altinn-nepal_demo-data|altinn-federation_(exchange-audit|transport-data|civil-data|company-data))
+      - name: Diagnostic logs if any step fails
+        if: failure()
+        run: |
+          ./demo status || true
+          ./demo logs || true
+          docker ps -a || true
+      - name: Cleanup even after a failed run
+        if: always()
+        run: ./demo down || true
+; then
+            echo "A synthetic data volume still exists after clean"
             exit 1
           fi
-          echo "PASS: clean --yes removed simulator data volume"
+          echo "PASS: clean --yes removed simulator and independent agency data volumes"
       - name: Diagnostic logs if any step fails
         if: failure()
         run: |
