@@ -8,6 +8,7 @@ const label = (s) => s ? String(s).replace(/_/g," ").replace(/-/g," ") : "—";
 const short = (s, max=95) => String(s||"").length > max ? String(s).slice(0,max)+"…" : String(s||"");
 const pages = [
   ["overview","◫","Overview",()=>true],
+  ["government","🇳🇵","For government",()=>true],
   ["native","⚙","Native Altinn",()=>true],
   ["services","▤","Services",r=>["citizen","director","accountant"].includes(r)],
   ["cases","◷","My applications",r=>r!=="observer"],
@@ -58,7 +59,7 @@ function sidebar(){
     '<p style="font-size:10px;color:#7894a5;line-height:1.5;margin-top:20px">Concept demonstration · synthetic data only · not affiliated with Nepal government</p></div></aside>';
 }
 function layout(body,title="Shared government services"){
-  root.innerHTML='<div class="shell">'+sidebar()+'<div class="main"><header class="topbar"><div><div class="eyebrow">Federated Digital Government · Nepal</div><h1>'+e(title)+'</h1></div><div class="top-right"><span class="pill orange">SIMULATED AGENCY DATA</span><span class="pill">'+(state.me?e(state.me.user.role_label):"PUBLIC PREVIEW")+'</span></div></header><main class="content">'+body+'</main></div></div>';
+  root.innerHTML='<div class="shell">'+sidebar()+'<div class="main"><header class="topbar"><div><div class="eyebrow">Nepal digital public services · illustrative demo</div><h1>'+e(title)+'</h1></div><div class="top-right"><span class="pill orange">SIMULATED AGENCY DATA</span><span class="pill">'+(state.me?e(state.me.user.role_label):"PUBLIC PREVIEW")+'</span></div></header><main class="content">'+body+'</main></div></div>';
 }
 function hero(eyebrow,title,desc,action,aside){
   return '<section class="hero"><div><div class="micro">'+e(eyebrow)+'</div><h2>'+title+'</h2><p>'+desc+'</p><div class="actions">'+action+'</div></div><div class="hero-side">'+aside+'</div></section>';
@@ -67,8 +68,39 @@ function stepAside(items,title="Follow the journey"){
   return '<h3>'+e(title)+'</h3>'+items.map((t,i)=>'<div class="step"><span class="step-bubble">'+(i+1)+'</span>'+e(t)+'</div>').join("");
 }
 function architecture(){
-  return '<div class="diagram"><div class="layer">Nagarik App-style citizen portal / business services</div><div class="arrow">↓ ↑</div><div class="layer">NepalID demonstration login — real local OIDC (Keycloak)</div><div class="arrow">↓ ↑</div><div class="layer highlight">Shared application workflow + authorization + delegation + audit<br><small style="font-weight:400;color:#c3d4df">Local implementations of Altinn concepts, not actual Altinn services</small></div><div class="arrow">↓ ↑</div><div class="branches"><div class="layer">🪪 Civil registry<br><small>mock</small></div><div class="layer">🚘 DoTM<br><small>mock</small></div><div class="layer">🏢 Business registry<br><small>mock</small></div></div><div class="arrow">↓ ↑</div><div class="layer">Nagarik App-style inbox + verifiable decision reference (mock)</div></div>';
+ return '<div class="diagram"><div class="branches">'+
+ '<div class="layer">📱 Nagarik App<br><small>Existing mobile channel<br>not connected here</small></div>'+
+ '<div class="layer">🌐 Nagarik Web<br><small>Possible future government channel<br>not built here</small></div>'+
+ '<div class="layer">🖥 Visual demo<br><small>Browser simulator only<br>not a government channel</small></div>'+
+ '</div><div class="arrow">↓ Possible shared government services (target architecture) ↓</div>'+
+ '<div class="layer highlight">Reusable services: identity integration · authorization · agency processes · notifications<br><small style="font-weight:400;color:#c3d4df">This is a proposed design, not an already-connected Nepal system.</small></div>'+
+ '<div class="arrow">↓ Today in this repository ↓</div>'+
+ '<div class="branches">'+
+ '<div class="layer">⚙ Actual Altinn App<br><small>Native .NET, BPMN, XACML<br>LocalTest shared-service emulators</small></div>'+
+ '<div class="layer">🔐 Demo Keycloak login<br><small>Real OIDC protocol<br>synthetic identities, separate from LocalTest</small></div>'+
+ '<div class="layer">📋 Simulator workflows<br><small>Separate local officer and delegation logic<br>not Altinn Access Management</small></div>'+
+ '</div><div class="arrow">↓ Token-protected local bridge for synthetic data only ↓</div>'+
+ '<div class="branches"><div class="layer">🪪 Civil registry<br><small>fake records</small></div><div class="layer">🚘 DoTM<br><small>fake licence lookup</small></div><div class="layer">🏢 Company registry<br><small>fake business records</small></div></div>'+
+ '<div class="layer">✉ Simulated Nagarik-style inbox — no live mobile app connection</div></div>';
 }
+function governmentBrief(){
+ return '<section class="hero"><div><div class="micro">A simple proposal for Nepal</div><h2>Keep Nagarik App.<br>Make government services easier to deliver.</h2><p>Nagarik App serves people on mobile today. We are demonstrating how government offices could share secure, reusable systems behind it. A future Nagarik Web could use those same services, if the government builds it with approved authentication and permissions.</p><div class="actions"><button class="btn primary" data-nav="ecosystem">See how the system could connect →</button><button class="btn ghost" data-nav="native">See actual Altinn code</button></div></div><div class="hero-side"><h3>सरल भाषामा</h3><p>नागरिक एप अहिले मोबाइलमा छ। हाम्रो उद्देश्य नयाँ एपले यसलाई बदल्नु होइन। कार्यालयका निवेदन, अभिलेख जाँच, अनुमति र सूचना दिने कामका लागि साझा प्रणाली उपयोगी हुन्छ कि भनेर नमुना देखाउने हो।</p><p>भविष्यमा सरकारले वेब सेवा उपलब्ध गराए पनि त्यसै साझा आधारबाट सेवा दिन सकिन्छ।</p></div></section>'+
+ '<div class="section-heading"><div><h2>What would a citizen see?</h2><p>One small example: correcting an address on a driving licence.</p></div></div>'+
+ '<div class="grid three">'+
+ feature("📱","1. Apply on a familiar channel","Today: Nagarik mobile. In the future: potentially Nagarik Web, if approved and built.")+
+ feature("🏛","2. Office processes the request","The responsible transport office checks existing records and an authorized employee makes a decision.")+
+ feature("✉","3. Receive an update","The citizen sees an application status or notice in an approved channel. This demo inbox is only a mock.")+
+ '</div>'+
+ '<div class="section-heading"><div><h2>What value could government test?</h2><p>Reuse technology and compare outcomes, instead of building another front-end app.</p></div></div>'+
+ '<div class="grid three">'+
+ feature("🔁","Reuse across departments","Forms and processes could be built on common components instead of starting from scratch.")+
+ feature("🤝","Who is allowed to act?","A company director could grant specific rights to an accountant, then withdraw them without sharing passwords.")+
+ feature("🔎","Clear responsibility","Staff can see who received a request, who acted, and when it changed status.")+
+ '</div>'+
+ '<div class="section-heading"><h2>What is actually ready?</h2></div><div class="card"><div class="flow-row"><strong>GENUINE Altinn application</strong><span class="status approved">real app code</span></div><p>Runs native Altinn .NET form, BPMN process and policy, with official LocalTest emulators for shared services.</p><div class="flow-row"><strong>VISUAL Nepal scenarios</strong><span class="status submitted">simulated</span></div><p>Citizen, officer, accountant and business roles are illustrative and use only made-up data.</p><div class="flow-row"><strong>Real Nepal systems, BankID, Nagarik mobile integration</strong><span class="status rejected">not connected</span></div><p>These need government approval, verified identity integration, contracts and serious deployment work.</p></div>'+
+ '<div class="mini-note"><strong>The next ask:</strong> One interested agency, one simple service, sample data and a technical contact. Run a pilot and measure whether the approach saves effort, improves accountability and remains under Nepal government control.</div>';
+}
+
 function nativeAltinn(){
  return hero("Official Altinn source · supported local stack",
  "Native Altinn Apps.<br>BPMN and XACML.",
@@ -79,8 +111,8 @@ function nativeAltinn(){
  feature("⚙","ACTUAL: Altinn Apps","Altinn.App.Api/Core, native form UI, model and process engine.")+
  feature("📋","ACTUAL: BPMN and XACML","Official Altinn app process and access policy, evaluated within the local stack.")+
  feature("🗄","EMULATED: Shared platform","LocalTest emulates storage, authentication and authorization APIs. National services are not deployed.")+
- '</div><div class="callout warn gap-top"><strong>Start this separately from Docker Compose</strong><code class="endpoint">bash scripts/start-native.sh</code><p>Requires .NET 10, studioctl and Docker/Podman. LocalTest user accounts are separate from the sandbox Keycloak users.</p></div>'+
- '<div class="section-heading"><h2>Nepal registry integration</h2></div><div class="card"><h3>Native instantiation prefill</h3><p>The Altinn App registers a real IInstantiationProcessor and calls a replaceable INepalRegistryClient. That client currently returns synthetic licence information; no DoTM API is connected.</p><span class="status submitted">SYNTHETIC ADAPTER</span></div>';
+ '</div><div class="callout warn gap-top"><strong>Launch native Altinn on its own or alongside this simulator</strong><code class="endpoint">bash scripts/start-all.sh</code><p>Requires .NET 10, studioctl and Docker/Podman. LocalTest user accounts are separate from the sandbox Keycloak users.</p></div>'+
+ '<div class="section-heading"><h2>Nepal registry integration</h2></div><div class="card"><h3>Native instantiation prefill</h3><p>The Altinn App registers a real IInstantiationProcessor and calls a replaceable INepalRegistryClient. That client calls a token-protected mock DoTM HTTP endpoint in combined mode, with a static synthetic fallback otherwise. No real DoTM API is connected.</p><span class="status submitted">SYNTHETIC ADAPTER</span></div>';
 }
 
 function landing(){
@@ -91,14 +123,14 @@ function landing(){
     ["👩‍💼","DoTM officer","Review applications, request information and issue a decision."],
     ["📊","Government observer","Watch cross-agency activity and reset the demonstration."]
   ];
-  return hero("Digital public infrastructure · interactive pilot","One login. Shared services.<br>Visible government value.","An end-to-end Nepal demonstration of identity, agency APIs, delegation, processing workflows, and service delivery. Real OIDC login with synthetic users; other systems are simulations.",'<a class="btn primary" href="/auth/login">Launch live journey →</a><button class="btn ghost" data-nav="ecosystem">Explore architecture</button>',stepAside(["Authenticate as a citizen or business","Exchange information between agencies","Process and approve a request","Deliver a result back to the inbox"],"A government service in four steps"))+
+  return hero("Digital public infrastructure · interactive pilot","One service journey.<br>Multiple government roles.","A visual, synthetic demonstration of citizen requests, officer decisions, company permissions and notifications. Real local OIDC login with fake users; not an official Nagarik mobile or web service.",'<a class="btn primary" href="/auth/login">Launch live journey →</a><button class="btn ghost" data-nav="ecosystem">Explore architecture</button>',stepAside(["Authenticate as a citizen or business","Exchange information between agencies","Process and approve a request","Deliver a result back to the inbox"],"A government service in four steps"))+
   '<div class="section-heading"><div><h2>Choose whose experience to explore</h2><p>Use one of these identities in NepalID. All demo accounts use the password <strong>Demo123!</strong></p></div></div><div class="login-people">'+cards.map((c,i)=>'<div class="persona"><div class="avatar">'+c[0]+'</div><strong>'+c[1]+'</strong><small>'+e(c[2])+'</small><div style="font-size:11px;margin-top:10px;color:#b57928;font-weight:800">'+["asha","raj","priya","maya","kiran"][i]+'</div></div>').join("")+'</div>'+
   '<div class="section-heading"><div><h2>What makes this different from another app?</h2><p>One reusable platform behind multiple channels and institutions.</p></div></div><div class="grid three">'+
   feature("🔐","Government-wide identity","Actual OIDC sign-in with a test identity provider, not just a fake login screen.")+
   feature("🤝","Delegated authority","A director authorizes and later revokes an accountant’s ability to act for a company.")+
   feature("🔗","Cross-agency workflow","Synthetic registries, transport records, approvals, an inbox, and an inspectable audit trail.")+
   '</div><div class="section-heading"><h2>Architecture at a glance</h2></div>'+architecture()+
-  '<div class="mini-note"><strong>Important transparency:</strong> This application is not a complete deployment of Norway’s Altinn Platform. It is a runnable Nepal-focused integration and presentation demonstrator. Keycloak provides real OIDC authentication; the application runtime and authorization are local proof-of-concept implementations, and all government registries are synthetic.</div>';
+  '<div class="mini-note"><strong>What you are seeing:</strong> This web portal is a presentation simulator, not Nagarik App or Nagarik Web. The repository also has a real native Altinn App running separately with LocalTest emulators. All government records here are fictional.</div>';
 }
 function feature(icon,title,desc){return '<div class="card"><div class="iconbox">'+icon+'</div><h3>'+title+'</h3><p>'+desc+'</p></div>';}
 function overview(){
@@ -167,14 +199,14 @@ function officer(){
  ((c.status==="approved"||c.status==="rejected")?'<p><strong>Decision already recorded.</strong> '+e(c.decision_note||"")+'</p>':'<div class="form-grid gap-top"><label class="field">Decision<select data-decision><option value="approved">Approve</option><option value="needs-info">Request more information</option><option value="rejected">Reject</option></select></label><label class="field span2">Officer note<textarea data-note placeholder="Reason for the decision" required>Verified against synthetic records</textarea></label><button class="btn dark span2" data-review="'+e(c.id)+'">Record official demo decision →</button></div>')+'</div>').join(""):'<div class="empty">No cases in the queue.</div>')+'</div>';
 }
 function inbox(){
- return '<div class="section-heading"><div><h2>Nagarik App-style inbox</h2><p>Illustrates how an existing citizen portal could receive events from shared services.</p></div>'+badge("SIMULATED")+'</div>'+
- '<div class="callout warn"><strong>Not connected to the real Nagarik App.</strong> These notifications are produced by the local workflow and stored in this demonstration database. A real deployment needs a government-approved Nagarik integration.</div>'+
+ return '<div class="section-heading"><div><h2>Nagarik-style demo inbox</h2><p>Visualizes how the existing mobile Nagarik channel might receive events in a future approved integration.</p></div>'+badge("SIMULATED")+'</div>'+
+ '<div class="callout warn"><strong>Not connected to the real mobile Nagarik App, nor a future Nagarik Web.</strong> These notifications are produced by the local workflow and stored in this demonstration database. A real deployment needs a government-approved Nagarik integration.</div>'+
  '<div class="card gap-top">'+((state.inbox||[]).length?state.inbox.map(n=>'<div class="record"><div class="item-title"><h3>✉ '+e(n.title)+'</h3><small>'+niceDate(n.created_at)+'</small></div><p>'+e(n.body)+'</p>'+(n.case_id?'<span class="endpoint">'+e(n.case_id)+'</span>':'')+'</div>').join(""):'<div class="empty">No messages. Submit an application or have an officer decide one.</div>')+'</div>';
 }
 function ecosystem(){
  let data=state.integrations||[];
- return '<div class="section-heading"><div><h2>Visual ecosystem map</h2><p>See what runs locally and what is a replaceable government API stub.</p></div></div>'+
- '<div class="grid two"><div>'+architecture()+'</div><div class="card"><h3>Integration principles</h3>'+flow("1","Nagarik stays the front door","Citizens do not need another government app.")+flow("2","OIDC establishes identity","Real local authentication; not identity proofing.")+flow("3","Common authorization governs access","Narrowly scoped grants and officer permissions.")+flow("4","Agency systems remain authoritative","Public and transport records are looked up, not replaced.")+flow("5","Decisions return to citizens","Inbox notification and a demo verification reference.")+'</div></div>'+
+ return '<div class="section-heading"><div><h2>Visual ecosystem map</h2><p>Compare the existing mobile channel, possible future web access and actual local demo components.</p></div></div>'+
+ '<div class="grid two"><div>'+architecture()+'</div><div class="card"><h3>Integration principles</h3>'+flow("1","Nagarik stays the front door","Nagarik App is mobile today; this demo portal is not official Nagarik Web.")+flow("2","OIDC establishes identity","Real local authentication; not identity proofing.")+flow("3","Common authorization governs access","Narrowly scoped grants and officer permissions.")+flow("4","Agency systems remain authoritative","Public and transport records are looked up, not replaced.")+flow("5","Decisions return to citizens","Inbox notification and a demo verification reference.")+'</div></div>'+
  '<div class="section-heading"><div><h2>Connection readiness</h2><p>Green = actual demo component. Amber = synthetic integration. Red = not yet connected.</p></div></div><div class="grid three">'+data.map(d=>'<div class="card integration"><div class="head"><h3>'+e(d.label)+'</h3>'+badge(d.status)+'</div><p>'+e(d.description)+'</p><code>'+e(d.key)+'</code></div>').join("")+'</div>'+
  '<div class="mini-note"><strong>Native Altinn clarification:</strong> the local workflow, authorisation and audit shown here are demo implementations inspired by Altinn. They are not the Norwegian Altinn platform source running underneath this interface. This separation is intentional so the demonstration is reproducible, honest and easy to replace with official platform integrations.</div>';
 }
@@ -187,12 +219,12 @@ function audit(){
  '<div class="callout warn gap-top"><strong>These are demonstration metrics, not evidence of national impact.</strong> A pilot should measure development effort, processing time, support load, reliability and actual costs.</div></div></div>';
 }
 function render(){
- const title={overview:"Government service overview",native:"Native Altinn application",services:"Apply for a service",cases:"Applications & decisions",delegations:"Representation & permissions",officer:"DoTM agency workspace",inbox:"Citizen service inbox",ecosystem:"Connected government map",audit:"Oversight & audit"}[state.page]||"Nepal Digital Government";
+ const title={overview:"Government service overview",government:"For government leaders",native:"Native Altinn application",services:"Apply for a service",cases:"Applications & decisions",delegations:"Representation & permissions",officer:"DoTM agency workspace",inbox:"Citizen service inbox",ecosystem:"Connected government map",audit:"Oversight & audit"}[state.page]||"Nepal Digital Government";
  const r=role(), allowed=pages.some(p=>p[0]===state.page && p[3](r));
  if(!allowed)state.page="overview";
  let content;
- if(!state.me)content=state.page==="native"?nativeAltinn():state.page==="ecosystem"?'<div class="section-heading"><h2>Architecture preview</h2></div>'+architecture()+'<div class="actions"><a class="btn dark" href="/auth/login">Sign in to interact →</a></div><div class="mini-note">Only NepalID is a real local OIDC connection. No Nepali government system is connected.</div>':landing();
- else content=({overview,native:nativeAltinn,services,cases,delegations,officer,inbox,ecosystem,audit}[state.page]||overview)();
+ if(!state.me)content=state.page==="government"?governmentBrief():state.page==="native"?nativeAltinn():state.page==="ecosystem"?'<div class="section-heading"><h2>Architecture preview</h2></div>'+architecture()+'<div class="actions"><a class="btn dark" href="/auth/login">Sign in to interact →</a></div><div class="mini-note">Only NepalID is a real local OIDC connection. No Nepali government system is connected.</div>':landing();
+ else content=({overview,government:governmentBrief,native:nativeAltinn,services,cases,delegations,officer,inbox,ecosystem,audit}[state.page]||overview)();
  layout(content,title);
 }
 root.addEventListener("click",async(ev)=>{

@@ -16,8 +16,9 @@ Actual Altinn App: http://local.altinn.cloud:8000/ttd/nepal-licence/
 Nepal presentation simulator: http://localhost:8085
 Local Keycloak login: http://localhost:8081
 
-Note: the simulator and native Altinn App run side by side, not via a shared
-identity or data integration. LocalTest shared services are emulated.
+Note: identity and workflow engines are separate. A narrow, token-protected
+localhost bridge exchanges SYNTHETIC DoTM prefill and task events only.
+LocalTest shared services are emulated; this is not full national Altinn.
 
 Stop: bash scripts/stop-all.sh
 MSG
