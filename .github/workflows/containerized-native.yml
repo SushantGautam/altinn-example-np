@@ -42,7 +42,15 @@ jobs:
           done
           curl -fsS http://localhost:8085/health
           docker exec localtest-app-nepal-licence sh -c 'wget -qO- http://portal:8000/health'
-          code=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: local.altinn.cloud" http://127.0.0.1:8000/ttd/nepal-licence/ || true)
+          code=000
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: local.altinn.cloud" http://127.0.0.1:8000/ttd/nepal-licence/ || true)
+            echo "Native Altinn route returned HTTP $code"
+            if [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]; then
+              break
+            fi
+            sleep 2
+          done
           [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]
           PORTAL_BASE_URL=http://localhost:8085 python scripts/smoke_oidc.py
       - name: Stop all runtimes via the same launcher and verify teardown
