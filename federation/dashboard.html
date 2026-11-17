@@ -44,7 +44,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#1a557d}
 <span class="pill">SYNTHETIC / LOCAL ONLY · NOT GOVERNMENT INFRASTRUCTURE</span></header>
 <main>
 <div class="headline"><div><div class="label">A practical cross-institution reference architecture</div><h1>One government service. Several independent institutions.</h1><p class="subtitle">See how a shared service can request only authorized information from different authorities—without giving the service direct access to their private databases.</p></div><div><a href="http://localhost:8085" class="btn secondary">Open citizen demonstration ↗</a></div></div>
-<div class="notice"><b>What is real?</b> The native Altinn App, Keycloak OAuth2 client credentials, signed JWT validation, scope-like agency role enforcement, separate Docker networks, SQLite agency ownership and retryable local outbox. <b>What is not real?</b> NepalID, actual government registries, actual Nagarik mobile App, a nationwide deployment, or independently operated Altinn national Authentication / Authorization / Storage services.</div>
+<div class="notice"><b>What is real?</b> The native Altinn App, Keycloak OAuth2 client credentials, signed JWT validation, agency-specific roles, per-service mutual TLS certificates, purpose-restricted registry access, separate Docker networks, agency-owned audit logs and a retryable outbox. <b>What is not real?</b> NepalID, actual government registries, actual Nagarik mobile App, a nationwide deployment, or independently operated Altinn national Authentication / Authorization / Storage services.</div>
 
 <section class="panel">
 <div class="label">Technical architecture explained without code</div><h2>Who can talk to whom?</h2>
@@ -55,8 +55,8 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#1a557d}
 </div>
 <div class="connector">↓ <strong>Shared broker → agency-authorized service calls only</strong> ↓</div>
 <div class="grid">
-<div class="station"><div class="tag">SHARED EXCHANGE NETWORK</div><strong>🏛 Government exchange broker</strong><small>Obtains a machine token, selects an agency gateway, records each decision and queues events for retry.</small></div>
-<div class="station"><div class="tag">SERVICE ACCESS BOUNDARY</div><strong>🔐 Agency gateway</strong><small>Checks JWT issuer, audience, expiration and agency-specific permission. Only gateway can reach its agency data network.</small></div>
+<div class="station"><div class="tag">SHARED EXCHANGE NETWORK</div><strong>🏛 Government exchange broker</strong><small>Obtains a machine token, connects to a gateway with mutual TLS, records correlated requests and queues events for retry.</small></div>
+<div class="station"><div class="tag">SERVICE ACCESS BOUNDARY</div><strong>🔐 Agency gateway</strong><small>Checks JWT issuer, audience, expiry, declared purpose and agency permission; requires a valid TLS client certificate. Only its gateway enters its private registry network.</small></div>
 <div class="station"><div class="tag">AUDIT & DELIVERY</div><strong>📝 Trace + durable outbox</strong><small>Each request gets a correlation ID; notification events are queued and retried if the destination is unavailable.</small></div>
 </div>
 <div class="connector">↓ <strong>Each gateway alone can enter its own internal data network</strong> ↓</div>
@@ -71,7 +71,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#1a557d}
 <div class="two">
 <section class="panel">
 <div class="label">Live demonstration · fictional records only</div><h2>Ask an institution for information</h2>
-<p class="subtitle">The broker acquires a signed service token from Keycloak, the chosen agency checks authorization, and only its gateway can retrieve a record. Try a denied request to see the security boundary in action.</p>
+<p class="subtitle">The broker acquires a signed machine token from Keycloak, establishes mutual TLS with the agency gateway, and gets only an authorized record from the agency-owned network. Try a denied request to see the security boundary in action.</p>
 <div class="actions">
 <button class="btn" onclick="run('transport',false)">🚘 Read transport record</button>
 <button class="btn" onclick="run('civil',false)">🪪 Read civil record</button>
