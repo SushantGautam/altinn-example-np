@@ -6,7 +6,7 @@ The native Altinn application scaffold was copied and adapted from the open-sour
 
 The upstream structure supplies the .NET Altinn Apps application scaffold, API/Core package references, BPMN, XACML policy, data-model structure, native UI/layout files, and deployment artefacts. This project adds a fictional Nepal driving-licence service, synthetic registry adapter and optional demonstration callback.
 
-**Licensing:** consult the specific upstream repository's license and any included third-party notices before redistribution or deployment. This attribution is not an assertion of Norwegian government sponsorship or approval.
+**Licensing:** the Altinn Studio source is MIT-licensed, with copyright retained by the Norwegian Digitalisation Agency. The full upstream license notice is reproduced in [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md). This attribution is not an assertion of Norwegian government sponsorship or approval.
 
 **Runtime truth:** this is actual Altinn App code that compiles and can be launched with official `studioctl`. Its local shared Storage/Authentication/Authorization APIs are served by **LocalTest emulators**, not a full production Altinn Platform installation.
 
