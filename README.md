@@ -50,7 +50,7 @@ To stop services:
 ./demo down
 ```
 
-`./demo clean --yes` also deletes the simulator's persisted sample data. See [Docker operations](docs/DOCKER.md) for additional commands, network settings and troubleshooting. Run this project only on a trusted development machine; never expose the demo ports publicly.
+`./demo clean --yes` removes the portal data, synthetic agency registry records and exchange audit volumes; it does not reset Altinn LocalTest data. See [Docker operations](docs/DOCKER.md) for additional commands, network settings and troubleshooting. Run this project only on a trusted development machine; never expose the demo ports publicly.
 
 ## Repository layout
 
