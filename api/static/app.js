@@ -31,7 +31,7 @@ function notify(msg,error=false) {
   clearTimeout(notify.timeout);notify.timeout=setTimeout(()=>toast.innerHTML="",4500);
 }
 async function boot(){
-  try {state.users=(await request("/api/demo-users")).map ? (await request("/api/demo-users")) : [];} catch {state.users=[];}
+  try {state.users=await request("/api/demo-users");} catch {state.users=[];}
   try {state.me=await request("/api/me");await refresh();}catch{state.me=null;render();}
 }
 async function refresh(){

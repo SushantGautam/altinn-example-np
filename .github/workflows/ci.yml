@@ -46,6 +46,8 @@ jobs:
           curl -fsS http://localhost:8000/health | python -c 'import json,sys; x=json.load(sys.stdin); assert x["ok"] and not x["altinn_connected"]'
           curl -fsS http://localhost:8081/realms/nepal-demo/.well-known/openid-configuration | python -c 'import json,sys; x=json.load(sys.stdin); assert x["issuer"] == "http://localhost:8081/realms/nepal-demo"'
           curl -fsS http://localhost:8000/api/demo-users | python -c 'import json,sys; a=json.load(sys.stdin); assert len(a)==5'
+      - name: Exercise OIDC authorization code and full citizen workflow
+        run: python scripts/smoke_oidc.py
       - name: Logs if smoke test failed
         if: failure()
         run: docker compose logs --tail 150
