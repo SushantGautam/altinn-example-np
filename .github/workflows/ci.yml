@@ -17,6 +17,8 @@ jobs:
       - name: API and authorization tests
         working-directory: api
         run: python -m pytest -q
+      - name: Documentation and terminology consistency
+        run: python scripts/check_docs.py
       - name: Browser script syntax
         run: node --check api/static/app.js
       - name: Docker Compose validation
