@@ -1,0 +1,35 @@
+services:
+  identity:
+    image: quay.io/keycloak/keycloak:26.1.2
+    command: ["start-dev", "--import-realm", "--hostname=http://localhost:8081"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: demo-admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: demo-admin-change-me
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - ./identity/nepal-realm.json:/opt/keycloak/data/import/nepal-realm.json:ro
+    restart: unless-stopped
+
+  portal:
+    build: ./api
+    environment:
+      PUBLIC_BASE_URL: http://localhost:8000
+      OIDC_ISSUER: http://localhost:8081/realms/nepal-demo
+      OIDC_INTERNAL: http://identity:8080/realms/nepal-demo
+      OIDC_CLIENT_ID: nepal-demo
+      OIDC_CLIENT_SECRET: local-demo-only-change-me
+      SESSION_SECRET: local-demonstration-not-for-public-deployment-change-me
+      DB_PATH: /data/nepal.db
+      DEMO_MODE: "true"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - demo-data:/data
+    depends_on:
+      - identity
+    restart: unless-stopped
+
+volumes:
+  demo-data:

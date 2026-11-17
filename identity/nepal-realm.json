@@ -1,0 +1,107 @@
+{
+  "realm": "nepal-demo",
+  "enabled": true,
+  "displayName": "NepalID · demonstration identity provider",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "loginWithEmailAllowed": false,
+  "sslRequired": "none",
+  "clients": [
+    {
+      "clientId": "nepal-demo",
+      "name": "Nepal Digital Services Demo",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "local-demo-only-change-me",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8000/auth/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:8000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "asha",
+      "firstName": "Asha",
+      "lastName": "Shrestha",
+      "email": "asha@example.test",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo123!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "raj",
+      "firstName": "Raj",
+      "lastName": "Thapa",
+      "email": "raj@example.test",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo123!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "priya",
+      "firstName": "Priya",
+      "lastName": "Kandel",
+      "email": "priya@example.test",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo123!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "maya",
+      "firstName": "Maya",
+      "lastName": "Adhikari",
+      "email": "maya@example.test",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo123!",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "kiran",
+      "firstName": "Kiran",
+      "lastName": "Sharma",
+      "email": "kiran@example.test",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo123!",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
