@@ -5,3 +5,6 @@ __pycache__/
 *.db
 .DS_Store
 node_modules/
+
+# Ephemeral laptop demo token (never commit)
+.demo.local.env
