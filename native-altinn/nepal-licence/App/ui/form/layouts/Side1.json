@@ -1,0 +1,63 @@
+{
+  "$schema": "https://altinncdn.no/toolkits/altinn-app-frontend/4/schemas/json/layout/layout.schema.v1.json",
+  "data": {
+    "hidden": false,
+    "layout": [
+      {
+        "id": "pilot-intro",
+        "type": "Header",
+        "size": "L",
+        "textResourceBindings": {
+          "title": "pilot.header"
+        }
+      },
+      {
+        "id": "pilot-explanation",
+        "type": "Paragraph",
+        "textResourceBindings": {
+          "title": "pilot.explanation"
+        }
+      },
+      {
+        "id": "licence-reference",
+        "type": "Input",
+        "required": true,
+        "textResourceBindings": {
+          "title": "licence.number"
+        },
+        "dataModelBindings": {
+          "simpleBinding": "licenceNumber"
+        }
+      },
+      {
+        "id": "requested-address",
+        "type": "Input",
+        "required": true,
+        "textResourceBindings": {
+          "title": "licence.address"
+        },
+        "dataModelBindings": {
+          "simpleBinding": "requestedAddress"
+        }
+      },
+      {
+        "id": "change-reason",
+        "type": "TextArea",
+        "required": true,
+        "textResourceBindings": {
+          "title": "licence.reason"
+        },
+        "dataModelBindings": {
+          "simpleBinding": "reason"
+        }
+      },
+      {
+        "id": "submit-application",
+        "type": "Button",
+        "textResourceBindings": {
+          "title": "pilot.submit"
+        }
+      }
+    ]
+  }
+}
