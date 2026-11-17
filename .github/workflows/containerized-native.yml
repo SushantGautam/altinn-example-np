@@ -12,6 +12,7 @@ on:
       - 'identity/nepal-realm.json'
       - 'api/**'
       - 'federation/**'
+      - 'scripts/check_federation.py'
       - 'infra/federation/**'
       - 'identity/nepal-realm.json'
   workflow_dispatch:
