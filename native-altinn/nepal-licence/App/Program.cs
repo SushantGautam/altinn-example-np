@@ -11,7 +11,7 @@ using Microsoft.OpenApi.Models;
 void RegisterCustomAppServices(IServiceCollection services, IConfiguration config, IWebHostEnvironment env)
 {
     // Native Altinn IInstantiationProcessor prefill backed by a replaceable Nepal registry adapter.
-    services.AddSingleton<INepalRegistryClient, SyntheticNepalRegistryClient>();
+    services.AddHttpClient<INepalRegistryClient, SyntheticNepalRegistryClient>();
     services.AddTransient<Altinn.App.Core.Features.IInstantiationProcessor, NepalRegistryPrefill>();
     services.AddHttpClient();
     services.AddTransient<Altinn.App.Core.Features.IProcessTaskEnd, NativeNagarikTaskEnd>();

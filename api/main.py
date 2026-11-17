@@ -467,6 +467,17 @@ def reset(user=Depends(require_csrf)):
     return {"ok": True}
 
 
+@app.get("/api/stubs/dotm/licence")
+def synthetic_dotm_licence(request: Request):
+    """Local test API for Altinn's native instantiation prefill client."""
+    if not DEMO_MODE:
+        raise HTTPException(404)
+    token = request.headers.get("x-native-demo-token", "")
+    if not NATIVE_WEBHOOK_TOKEN or not token or not hmac.compare_digest(token, NATIVE_WEBHOOK_TOKEN):
+        raise HTTPException(403, "Invalid local demonstration integration token")
+    return {"reference": "DL-NP-SYNTHETIC-001", "source": "DoTM HTTP registry stub (synthetic)"}
+
+
 @app.post("/api/integrations/native-altinn/events")
 def receive_native_altinn_event(payload: dict, request: Request):
     """Local-only synthetic bridge from a REAL Altinn process hook.
