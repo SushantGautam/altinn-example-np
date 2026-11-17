@@ -45,7 +45,15 @@ flowchart TB
 | Cross-stack bridge | `/api/stubs/dotm/licence` and `/api/integrations/native-altinn/events` | Token-protected localhost demo API |
 | Nagarik inbox | `/api/inbox` | Mock only, shown inside presentation web UI |
 
-## 2. Current mobile channel versus future government web channel
+## 2. Local interagency network example
+
+The separate `infra/federation/compose.yml` stack illustrates how services might exchange records while agencies retain their own data stores. It creates independent Docker bridge networks for transport, civil registration and company registration. Each synthetic registry is reachable only through its corresponding agency gateway. A central exchange broker connects to those gateways, not to the registry-only networks.
+
+The example uses locally generated certificates for mutual TLS, Keycloak-issued OAuth2 service tokens and role checks. It also provides a demonstration audit trail and retryable event processing. This is runnable example code with synthetic records; it is **not** a real cross-ministry network deployment. The generated CA, Docker network boundaries, local service secrets and access rules are not a substitute for production PKI, formally approved information-sharing agreements, accredited identity, secure key custody, operations or a security assessment.
+
+The native Altinn app reaches the exchange broker through a local HTTP demonstration token. That bridge should not be mistaken for native Altinn platform federation or a production OAuth/mTLS integration.
+
+## 3. Current mobile channel versus future government web channel
 
 The **actual Nagarik App is a mobile product** for public services at the documented stage. A Nepal government procurement scope describes **Nagarik Web** as a desired web-based counterpart. This repository's web UI is merely a desktop/mobile-friendly **presentation simulator**, not an official Nagarik product.
 
@@ -68,7 +76,7 @@ flowchart TB
 
 This is a **target-state concept**, not a deployed system. A separate web channel does not require duplicating forms, processes and data repositories if the architecture supports common APIs. It does require browser-safe authentication (for example OIDC authorization code with PKCE), government-approved assurance, security and accessibility; implementation and policy decisions remain with Nepal.
 
-## 3. Data flows in the current demonstration
+## 4. Data flows in the current demonstration
 
 **Flow A: native Altinn prefill.** A user authenticates with LocalTest and creates an Altinn instance. Altinn calls `IInstantiationProcessor.DataCreation`. The adapter reads a fictional licence reference from the localhost DoTM mock when configured, otherwise returns a static fictional fallback. The app data model receives the reference. This is not an authoritative lookup.
 
@@ -78,7 +86,7 @@ This is a **target-state concept**, not a deployed system. A separate web channe
 
 **Flow D: simulated agency decision.** Asha submits a fake licence correction through the simulator UI; Maya reviews in the simulator's officer desk; Asha sees a mock inbox message and a demo-only HMAC verification URL. This is not a legal signature or a real DoTM update.
 
-## 4. Security and operations boundaries
+## 5. Security and operations boundaries
 
 - **Ports bind to 127.0.0.1**, not to a public network interface. Do not expose the demonstration directly to the Internet.
 - Tokens in the bridge are shared local bearer secrets; they are not OAuth service tokens. `./demo up` generates an ephemeral value and provides it to the portal; a restricted config file is copied into the running Altinn container, not baked into its image.
@@ -88,7 +96,7 @@ This is a **target-state concept**, not a deployed system. A separate web channe
 - The bridge performs no durable retry/outbox delivery; failure is logged and not retried. The inbox assigns events to a sample persona rather than resolving citizens' identity.
 - No real personal, company, national-ID or licence data must be submitted.
 
-## 5. Production architecture: decisions not yet made
+## 6. Production architecture: decisions not yet made
 
 A real deployment would need to specify:
 

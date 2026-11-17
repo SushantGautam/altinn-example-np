@@ -18,7 +18,7 @@ sequenceDiagram
   Note over N: Synthetic notification for fixed test user Asha
 ```
 
-The Altinn lifecycle hook code is genuine, and each HTTP endpoint is exercised in local tests. With `./demo up`, the native App container connects to `http://portal:8000` on its private Docker network using a random token injected into `/tmp/altinn-nepal-bridge.json` after the image is built. The combined environment has passed a CI startup/contract smoke test. **A browser-driven native Altinn application being submitted through its task and delivering a notification has not yet been automated in CI.** The mock inbox is not an actual Nagarik channel.
+The Altinn lifecycle hook code is genuine, and each HTTP endpoint is exercised in local tests. With `./demo up`, the native App container connects to `http://exchange-broker:8000` using a random local token injected into `/tmp/altinn-nepal-bridge.json` after the image is built. The broker handles synthetic agency exchange and forwards eligible test events to the simulator. The direct portal stubs remain useful for isolated contract tests. The combined environment has passed a CI startup/contract smoke test. **A browser-driven native Altinn application being submitted through its task and delivering a notification has not yet been automated in CI.** The mock inbox is not an actual Nagarik channel.
 
 ### Native prefill stub (implemented)
 
@@ -143,4 +143,4 @@ In production, field names, data types, query permissions and audit obligations 
 
 ## All-Docker bridge
 
-The default `./demo up` runs real Altinn and the separate Nepal simulator as containers, using `studioctl --mode container` plus Docker Compose. Native lifecycle hooks connect to the fake DoTM/inbox APIs through Docker service DNS `portal:8000`; the browser accesses the portal on `localhost:8085`. A random demo secret is placed in a restricted file inside the running native app container. This is a **local synthetic protocol**, not authenticated government API access, cross-realm identity federation or guaranteed message delivery. See [Docker operations](DOCKER.md).
+The default `./demo up` runs real Altinn and the separate Nepal simulator as containers, using `studioctl --mode container` plus Docker Compose. Native lifecycle hooks connect to the synthetic exchange broker through Docker service DNS `exchange-broker:8000` using `/v1/native/dotm` and `/v1/native/events`. The browser accesses the portal on `localhost:8085`, and a separate federation dashboard is available on `localhost:8090`. A random demo secret is placed in a restricted file inside the running native app container. This is a **local synthetic protocol**, not authenticated government API access, cross-realm identity federation or guaranteed message delivery. See [Docker operations](DOCKER.md).

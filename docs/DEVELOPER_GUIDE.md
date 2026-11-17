@@ -126,8 +126,8 @@ Run `scripts/smoke_oidc.py` only with the simulator and Keycloak services **runn
 | `PORTAL_PORT` | Docker Compose host port | 8000 simulator alone, 8085 combined |
 | `PORTAL_BASE_URL` | Simulator OIDC callback | `http://localhost:8000` or `http://localhost:8085` |
 | `NATIVE_WEBHOOK_TOKEN` | Simulator and runtime bridge file | Random local demo token in ignored `.demo.local.env` |
-| `DOTM_MOCK_REGISTRY_URL` | Optional process mode; Docker mode reads `/tmp/altinn-nepal-bridge.json` | Synthetic lookup at `http://portal:8000` inside Docker |
-| `NAGARIK_DEMO_WEBHOOK_URL` | Optional process mode; Docker mode reads the injected file | Synthetic event receiver at `http://portal:8000` inside Docker |
+| `DOTM_MOCK_REGISTRY_URL` | Optional process mode; Docker mode reads `/tmp/altinn-nepal-bridge.json` | Combined demo uses `http://exchange-broker:8000/v1/native/dotm`; direct portal stub remains available for isolated tests |
+| `NAGARIK_DEMO_WEBHOOK_URL` | Optional process mode; Docker mode reads the injected file | Combined demo uses `http://exchange-broker:8000/v1/native/events`; direct portal endpoint remains available for isolated tests |
 | `DB_PATH` | Simulator | Local SQLite database path |
 | `OIDC_ISSUER`, `OIDC_INTERNAL` | Simulator | Browser and container endpoint for Keycloak |
 | `SESSION_SECRET` | Simulator | Development-only signing secret; not for production |
@@ -183,4 +183,4 @@ Full route definitions and hypothetical future agency contracts: [integration co
 
 ## Full Docker lifecycle
 
-The default launch is `./demo up`, and the matching stop command is `./demo down`. The native app is an official Altinn container built by `studioctl run --mode container`; the portal/Keycloak are Docker Compose containers. This is one command controlling two Docker environments, **not** one Compose file. `./demo clean --yes` additionally deletes simulator data but does not reset LocalTest's separately managed volumes. See [Docker operations](DOCKER.md).
+The default launch is `./demo up`, and the matching stop command is `./demo down`. The native app is an official Altinn container built by `studioctl run --mode container`; the portal/Keycloak are Docker Compose containers. This is one command controlling two Docker environments, **not** one Compose file. `./demo clean --yes` deletes portal data, synthetic agency records and broker audit volumes but does not reset LocalTest's separately managed volumes. The federation Compose project is orchestrated alongside the portal and native Altinn. See [Docker operations](DOCKER.md).

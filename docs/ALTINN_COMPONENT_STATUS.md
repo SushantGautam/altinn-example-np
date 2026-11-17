@@ -20,6 +20,8 @@
 | Altinn Authentication | **Official LocalTest emulator** | LocalTest user identities; no real BankID or approved Nepal issuer |
 | Altinn Authorization | **Official LocalTest emulator** | Tests app policy; no production access management/party delegation |
 | Altinn Register/Profile | **Official LocalTest emulator** | Synthetic LocalTest parties; not Nepal registries |
+| Isolated agency networks and mTLS | **Functional local federation example** in `infra/federation/compose.yml` | Separate Docker bridge networks, locally generated certificates and synthetic registries; not separate institutional infrastructure |
+| OAuth2 service exchange and broker | **Functional local federation example** in `federation/service.py` | Keycloak test machine identities, role checks and synthetic audit/outbox; not a government exchange platform |
 | Altinn Events/Dialogporten/correspondence | **Not deployed** as national services | Native custom task-end callback is **not** their replacement |
 | Separate simulator Keycloak | **Real OIDC protocol**, synthetic users | `ci.yml` tests OIDC and sign-ins; no identity proofing/assurance |
 | Simulator case workflow | **Functional simulator** in FastAPI/SQLite | Tests case creation/decision/inbox; **not native Altinn Apps** |
@@ -62,4 +64,4 @@ Reference: [Official Altinn studioctl local development](https://docs.altinn.stu
 
 ## Local all-Docker execution
 
-`./demo up` runs every demo **runtime** in Docker: real Altinn App, official LocalTest emulators, Keycloak, Nepal simulator and databases. A host `studioctl` CLI manages Altinn's containers, but no host .NET SDK is needed. `./demo down` stops all containers and removes the shared Compose network while keeping data; `./demo clean --yes` additionally deletes simulator volume data. The independent national Altinn production microservices are **not installed**. See [Docker operations](DOCKER.md).
+`./demo up` runs every demo **runtime** in Docker: real Altinn App, official LocalTest emulators, Keycloak, Nepal simulator and databases. A host `studioctl` CLI manages Altinn's containers, but no host .NET SDK is needed. `./demo down` stops all containers and removes the shared Compose network while keeping data; `./demo clean --yes` additionally deletes portal, synthetic agency-registry and exchange-audit volumes; LocalTest volumes are managed separately. The independent national Altinn production microservices are **not installed**. See [Docker operations](DOCKER.md).

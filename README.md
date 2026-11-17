@@ -1,113 +1,91 @@
-# Nepal Digital Government × Altinn — Working Demonstrator 🇳🇵
+# Nepal digital services: Altinn reference implementation
 
-**Nagarik App is the mobile door people already know. The question is what common services can run behind that door — and a possible future web door — without every ministry building everything again.**
+A local demonstrator for exploring how Norway's Altinn technology could support digital public services in Nepal, alongside the existing Nagarik App.
 
-This is an **open-for-review demonstration project**, not an official Nepal government product. It brings together:
+This is an independent technical project. It is not a service of the Government of Nepal, the Norwegian government, Digdir, or the Altinn programme, and it has not been approved for public-service delivery.
 
-1. **A real Altinn Studio application**: official .NET Altinn Apps runtime, Altinn UI, form model, BPMN process and XACML policy. It runs with **official LocalTest emulators** for shared services.
-2. **A Nepal-facing visual simulator**: citizen, transport officer, director, accountant and observer dashboards backed by fake records and **local Keycloak OpenID Connect** login.
-3. **A narrow localhost integration bridge**: native Altinn can fetch a synthetic DoTM licence record and publish a task-completion event into the simulator's synthetic Nagarik inbox.
+## What this project demonstrates
 
-**No real Nepal government, Nagarik App, national ID, company registry, transport department, BankID or nationwide Altinn platform service is connected.** Neither source code nor screenshots should be presented as a production deployment.
+The project contains three parts:
 
-## Read this first
+- **Native Altinn application.** A sample driving-licence information service built with the Altinn Apps .NET runtime, Altinn UI, a BPMN process, an application data model and XACML access policy. It runs against the official **LocalTest** emulators.
+- **Nepal service simulator.** A separate FastAPI web application with fictional citizens, officers, companies and cases. Keycloak provides local OpenID Connect sign-in. Its officer review and business delegation are simulator features, **not** Altinn shared authorization services.
+- **Local integration examples.** Native Altinn hooks call a mock transport registry and publish task events to a simulated service inbox. A separate federation example illustrates network segmentation and gateway communication with synthetic records.
 
-| Audience | Document |
-|---|---|
-| **Government officials** | [Brief in simple English](docs/GOVERNMENT_BRIEF_EN.md) |
-| **सरकारी प्रतिनिधि** | [सरल नेपालीमा परिचय](docs/GOVERNMENT_BRIEF_NP.md) |
-| **Meeting presenter** | [Live presentation script](docs/PRESENTATION_SCRIPT.md) |
-| **Developer / engineer** | [Installation and development](docs/DEVELOPER_GUIDE.md) |
-| **Architect / technical reviewer** | [Architecture](docs/ARCHITECTURE.md) and [component status](docs/ALTINN_COMPONENT_STATUS.md) |
-| **Identity and Nagarik stakeholders** | [Mobile today; possible web later](docs/IDENTITY_AND_CHANNELS.md) |
-| **Project sponsor** | [Proof-of-value pilot plan](docs/PILOT_PLAN.md) |
-| **All documentation** | [Documentation index](docs/README.md) |
+No live Nepal government register, Nagarik App, national identity provider, BankID, or production Altinn shared service is connected.
 
-## How Nagarik App fits
+## For government and programme teams
 
-**Today:** public-facing Nagarik App is a **mobile application**. It is **not** the web interface in this repository. A Nepal government procurement scope describes **Nagarik Web** as a possible/planned web counterpart; this does not establish that the web product is operating today. [Source: Nagarik App upgrade scope, section 3.2.1](https://bolpatra.gov.np/egp/download?alfId=cm%3ABidding_Documentsnull%2Fcm%3AY2021%2Fcm%3AM1%40%40%40%40%40cf6cc693-9187-454a-9bc7-0bcf44d42e3d&docId=66495320).
+The proposal is to **complement, not replace, Nagarik App**. Nepal already has a mobile channel for citizens. The question is whether common building blocks behind government services could reduce duplicate development and make responsibilities, permissions and processing easier to manage.
 
-**Potential future:** mobile Nagarik App and an authorized Nagarik Web could share the same **identity integration, agency services, workflows and notifications**. That needs approved Nepal identity federation, legal authority, API integrations and security engineering. The browser simulator here is a **teaching aid**, not Nagarik Web.
+A useful next step would be a small, jointly defined technical pilot with one willing institution and an agreed service. This repository is a conversation starter, not evidence of savings or a recommendation to procure a particular platform.
 
-## Run the entire showcase — all application services in Docker
+- [Brief for decision-makers (English)](docs/GOVERNMENT_BRIEF_EN.md)
+- [सरकारी प्रतिनिधिका लागि नेपाली परिचय](docs/GOVERNMENT_BRIEF_NP.md)
+- [Meeting walkthrough](docs/PRESENTATION_SCRIPT.md)
+- [Proposed pilot and evaluation criteria](docs/PILOT_PLAN.md)
 
-The genuine Altinn App is now also built and run as a **Docker container** with official `studioctl run --mode container`. Altinn LocalTest services, the Nepal portal, Keycloak and databases are containerized. **Host requirements:** Docker with Compose v2, Bash, Git and the [official `studioctl` preview CLI](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/). **No host .NET SDK or Python installation is required.** The CLI is a host control tool, so this is one command orchestrating two Docker environments—not a single Compose file.
+## Run locally
+
+Requirements: Docker with Compose v2, Bash, Git, and the official [Altinn `studioctl` preview CLI](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/). The application runtime is containerized; No host .NET SDK or Python runtime is required for the combined demonstration.
 
 ```bash
 git clone https://github.com/SushantGautam/altinn-example-np.git
 cd altinn-example-np
-
-# After installing studioctl once
 ./demo up
 ./demo status
-./demo down
-
-# Optional: wipe only simulator records
-./demo clean --yes
 ```
 
-The legacy `bash scripts/start-all.sh` and `bash scripts/stop-all.sh` commands remain as wrappers. Detailed instructions: [Docker operations](docs/DOCKER.md).
-| Screen | Local URL | What it really is |
-|---|---|---|
-| Native Altinn App | http://local.altinn.cloud:8000/ttd/nepal-licence/ | Real Altinn Apps code, LocalTest platform emulation; uses **LocalTest** identities |
-| Nepal government presentation portal | http://localhost:8085 | Separate **web-based simulator**, not official Nagarik App/Web |
-| Local demo IdP | http://localhost:8081 | Keycloak for simulator users, **not** Nepal eID |
+| Address | Purpose |
+| --- | --- |
+| http://localhost:8085 | Nepal service simulator |
+| http://local.altinn.cloud:8000/ttd/nepal-licence/ | Native Altinn app, using LocalTest identities |
+| http://localhost:8081 | Local Keycloak identity provider |
+
+The simulator uses fictional accounts, including `asha` (citizen), `maya` (officer), `raj` (director) and `priya` (accountant), with the local-only password `Demo123!`. These credentials are intentionally public examples, not real accounts. The native Altinn app uses **different LocalTest identities**. The two systems do not share a login session.
+
+To stop services:
 
 ```bash
-# Stop both systems
-bash scripts/stop-all.sh
+./demo down
 ```
 
-For native Altinn only, use `bash scripts/start-native.sh` (also container mode). For simulator only, `docker compose up --build -d` uses port 8000; **do not start both standalone modes concurrently**. See [developer guide](docs/DEVELOPER_GUIDE.md).
+`./demo clean --yes` removes the portal data, synthetic agency registry records and exchange audit volumes; it does not reset Altinn LocalTest data. See [Docker operations](docs/DOCKER.md) for additional commands, network settings and troubleshooting. Run this project only on a trusted development machine; never expose the demo ports publicly.
 
-### Local demo accounts — simulator only
+## Repository layout
 
-All passwords are **`Demo123!`**; accounts are synthetic:
+| Path | Contents |
+| --- | --- |
+| `native-altinn/nepal-licence/` | Native Altinn application, model and process |
+| `api/` | Service simulator, web UI and tests |
+| `identity/` | Synthetic Keycloak realm |
+| `federation/`, `infra/federation/` | Interagency gateway and Docker-network simulation |
+| `scripts/` | Launcher, smoke tests and configuration checks |
+| `docs/` | Government, architectural and engineering documentation |
+| `.github/workflows/` | Build and integration checks |
 
-| Username | Persona | What to show |
-|---|---|---|
-| `asha` | Citizen | Licence correction, status and simulated inbox |
-| `maya` | DoTM reviewing officer | Case review and decision **inside the simulator** |
-| `raj` | Company director | Grant/revoke a narrow transport-permit scope **inside the simulator** |
-| `priya` | Accountant | Submit for the company only when delegated **inside the simulator** |
-| `kiran` | Government observer | Event log, counts, simulated connections and reset |
+## Implementation status
 
-**These Keycloak identities are not accepted by the native Altinn LocalTest application.** Log into native Altinn using a LocalTest test user. The narrow HTTP bridge **does not provide SSO or shared identity**.
+| Capability | Current implementation |
+| --- | --- |
+| Altinn app runtime, UI, BPMN, XACML | Native application |
+| Shared Altinn Authentication, Authorization, Storage and Register | Official LocalTest emulators |
+| Officer decisions and business delegation | Local simulator |
+| Registry read and task event | Synthetic local HTTP integration |
+| Agency network separation and service authentication | Docker-based federation example |
+| Nepal eID, Nagarik App and authoritative agency APIs | Not connected |
+| Standalone production Altinn platform | Not deployed |
 
-## What is real, what is not?
+The GitHub Actions workflows validate builds, configurations, simulator behavior and local integration smoke tests. They do **not** demonstrate a full browser-driven native submission, officer approval and final delivery through real government infrastructure.
 
-| Area | Status |
-|---|---|
-| .NET Altinn App runtime, Altinn form, BPMN, XACML and extensions | **GENUINE ALTINN APPLICATION CODE** |
-| Shared Storage, Authentication, Authorization, Register/Profile used by native local app | **OFFICIAL LOCALTEST EMULATORS** |
-| NepalID-style local sign-in | **REAL OIDC PROTOCOL**, synthetic Keycloak identities; no national identity proofing |
-| Native DoTM prefill and task-end callback | **REAL NATIVE ALTINN HOOKS**, synthetic/localhost-only data exchange |
-| Citizen/officer/accountant/delegation dashboard | **FUNCTIONAL LOCAL SIMULATOR**, not native Altinn Access Management |
-| Nagarik App, Nagarik Web, real DoTM/civil/company APIs | **NOT CONNECTED** |
-| Independent national-scale Altinn shared microservices | **NOT DEPLOYED** |
-| Official digital signatures, legal issuance, measured citizen outcomes | **NOT IMPLEMENTED / NOT CLAIMED** |
+For the exact test and component boundaries, consult [component status](docs/ALTINN_COMPONENT_STATUS.md), [architecture](docs/ARCHITECTURE.md) and the [developer guide](docs/DEVELOPER_GUIDE.md).
 
-See [complete, evidence-based status matrix](docs/ALTINN_COMPONENT_STATUS.md).
+## Working with this repository
 
-## Show the value to non-developers
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change. Report security concerns using [SECURITY.md](SECURITY.md), not a public issue. The [public-release checklist](docs/PUBLIC_RELEASE_CHECKLIST.md) identifies checks required before the repository is made public.
 
-The [presentation script](docs/PRESENTATION_SCRIPT.md) starts with **what changes for a citizen and government officer**, not Kubernetes or source code. Show a fictional licence correction, its visible review and inbox result, then a company director granting/revoking accountant access. Explicitly explain that the officer and business workflows are simulated today; the native Altinn app proves the actual application technology separately.
+### Attribution and licensing
 
-The government proposal is **reuse**, not replacement of the mobile Nagarik App: one shared layer for the service-building and operational tasks behind approved channels. A [small agency pilot](docs/PILOT_PLAN.md) should measure real benefits instead of asserting them.
+The native application was adapted from the [Altinn Studio application template](https://github.com/Altinn/altinn-studio); see [upstream attribution](native-altinn/nepal-licence/UPSTREAM.md). Upstream licensing and any third-party notices must be preserved. The project is distributed under the [MIT License](LICENSE). The original Altinn source retains its copyright and license notice in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Confirm ownership and third-party notices before changing repository visibility.
 
-## Development, checks and evidence
-
-- [Native Altinn app source](native-altinn/nepal-licence/README.md): official template structure plus synthetic Nepal service.
-- [Native Altinn path](docs/NATIVE_ALTINN_PATH.md): what is necessary beyond LocalTest for a genuine national platform.
-- [API contracts](docs/INTEGRATION_CONTRACTS.md): the implemented localhost stubs and *proposed* government interfaces.
-- [Docker operations](docs/DOCKER.md): one-command startup/teardown, data persistence, bridge details and troubleshooting.
-- [Developer guide](docs/DEVELOPER_GUIDE.md): files, ports, configuration, tests, troubleshooting and security.
-- GitHub Actions: `.github/workflows/containerized-native.yml` (all-Docker launch/teardown), `ci.yml`, `native-altinn.yml`, and `native-localtest.yml` (host-process developer test). These build the genuine app, validate configuration, exercise the simulator, start both processes and test the synthetic HTTP contracts. They **do not** yet automate a full native browser form submission through to a task-ended callback.
-
-## Safety and ownership
-
-**Local presentation only.** The sample usernames, passwords, role assignments, HMAC proof, SQLite store and HTTP bridge are intentionally not production-grade. **Do not enter real ID numbers, personal data or government credentials; do not expose these endpoints publicly.**
-
-Any Nepal deployment needs a named government owner, approved identity issuer, legal review, access-control mapping, agency integration contracts, security assurance, operations and sustainable support.
-
-**Status reviewed: 17 November 2026.** For reproducibility and limitations, start with the [documentation index](docs/README.md).
+All names, credentials, company details and records in this project are fictional. Do not use real personal data, official government credentials or live registry tokens.

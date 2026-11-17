@@ -8,3 +8,21 @@ node_modules/
 
 # Ephemeral laptop demo token (never commit)
 .demo.local.env
+
+# Local configuration and generated keys
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+
+# Developer tooling and build output
+.venv/
+.vscode/
+.idea/
+dist/
+build/
+coverage/

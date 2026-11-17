@@ -16,6 +16,13 @@ Choose a route based on what you need. All scenarios use **made-up data**. Nothi
 | Altinn platform engineers | [Native Altinn path](NATIVE_ALTINN_PATH.md) | Migration from LocalTest to independent production services |
 | Project sponsor / pilot partner | [Pilot plan](PILOT_PLAN.md) | Scope, roles, measurable results, decision gates |
 
+## Project maintenance and release
+
+- [Contributing](../CONTRIBUTING.md): changes, tests and code review.
+- [Security policy](../SECURITY.md): intended-use restrictions and private reporting.
+- [License](../LICENSE) and [third-party notices](../THIRD_PARTY_NOTICES.md): source reuse and attribution.
+- [Publication checklist](PUBLIC_RELEASE_CHECKLIST.md): remaining technical, legal and editorial checks.
+
 ## Language and source-of-truth rules
 
 - **Current Nagarik App public channel:** mobile app. A future Nagarik Web may be developed, but is not implemented in this repository.
