@@ -27,7 +27,7 @@ A useful next step would be a small, jointly defined technical pilot with one wi
 
 ## Run locally
 
-Requirements: Docker with Compose v2, Bash, Git, and the official [Altinn `studioctl` preview CLI](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/). The application runtime is containerized; a host .NET SDK or Python runtime is not required for the combined demonstration.
+Requirements: Docker with Compose v2, Bash, Git, and the official [Altinn `studioctl` preview CLI](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/). The application runtime is containerized; No host .NET SDK or Python runtime is required for the combined demonstration.
 
 ```bash
 git clone https://github.com/SushantGautam/altinn-example-np.git
