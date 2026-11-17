@@ -2,11 +2,41 @@
 
 **One login. Reusable services. Visible permissions. Connected government.**
 
-An interactive, self-hosted proof of concept for conversations about adopting **Altinn platform concepts** within Nepal's existing digital government ecosystem. It shows how Nagarik App, national identity, civil and business registries, and the Department of Transport Management could connect to a common application platform.
+Two complementary prototypes: a native Altinn App exercised through LocalTest and a standalone visual sandbox for conversations about **Altinn platform concepts** within Nepal's existing digital government ecosystem. It shows how Nagarik App, national identity, civil and business registries, and the Department of Transport Management could connect to a common application platform.
 
-> **Honest scope:** This repository is a **runnable, Altinn-inspired integration demo**, not a deployed copy of the complete Norwegian Altinn Platform or an official Nepali government application. The OIDC authentication flow is real, using local Keycloak with synthetic users. Government registry APIs, the Nagarik inbox, authorization, workflow runtime, audit log, and Altinn adapter are local demonstration implementations or placeholders. No production government systems are accessed.
+> **Honest scope:** The `native-altinn/` directory contains real Altinn application source running against LocalTest emulators, while `docker-compose.yml` still starts an Altinn-inspired sandbox. Neither is a deployed copy of all Norway's national platform services or an official Nepal government application. The OIDC authentication flow is real, using local Keycloak with synthetic users. Government registry APIs, the Nagarik inbox, authorization, workflow runtime, audit log, and Altinn adapter are local demonstration implementations or placeholders. No production government systems are accessed.
 
-## Start the demo
+## Native Altinn application — recommended technical demonstration
+
+A **genuine Altinn Studio v8 .NET App** lives in
+[`native-altinn/nepal-licence`](native-altinn/nepal-licence/README.md).
+It has the native Altinn runtime, BPMN process, data model,
+Altinn UI, XACML policy, and native `IInstantiationProcessor` with
+a replaceable, **synthetic** DoTM registry adapter.
+
+Prerequisites: **.NET 10 SDK**, Docker/Podman/Colima, and the official
+[`studioctl` CLI](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/).
+
+```bash
+# First install studioctl using the official documentation linked above.
+bash scripts/start-native.sh
+```
+
+Visit **http://local.altinn.cloud:8000** and use LocalTest test identities.
+The separate sandbox Keycloak users cannot authenticate to the native app.
+
+**Actual:** Altinn App runtime, process, UI, form model, instantiation hook and XACML policy.
+**Emulated:** shared Altinn Storage/Authentication/Authorization/Register/Profile via LocalTest.
+**Not connected:** Nepal eID, Nagarik App, DoTM live registry, full national Altinn microservices.
+See the [component-status matrix](docs/ALTINN_COMPONENT_STATUS.md).
+
+## Presentation sandbox — separate illustrative experience
+
+The following Docker Compose stack remains a **standalone simulator** for the
+multi-role story, not the native Altinn runtime. Its delegations, officer
+workflows and inbox are not yet connected to the native application.
+
+## Start the presentation sandbox
 
 Prerequisite: Docker Engine / Docker Desktop with Docker Compose (v2).
 

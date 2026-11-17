@@ -8,6 +8,7 @@ const label = (s) => s ? String(s).replace(/_/g," ").replace(/-/g," ") : "—";
 const short = (s, max=95) => String(s||"").length > max ? String(s).slice(0,max)+"…" : String(s||"");
 const pages = [
   ["overview","◫","Overview",()=>true],
+  ["native","⚙","Native Altinn",()=>true],
   ["services","▤","Services",r=>["citizen","director","accountant"].includes(r)],
   ["cases","◷","My applications",r=>r!=="observer"],
   ["delegations","♧","Delegated access",r=>["director","accountant"].includes(r)],
@@ -68,6 +69,20 @@ function stepAside(items,title="Follow the journey"){
 function architecture(){
   return '<div class="diagram"><div class="layer">Nagarik App-style citizen portal / business services</div><div class="arrow">↓ ↑</div><div class="layer">NepalID demonstration login — real local OIDC (Keycloak)</div><div class="arrow">↓ ↑</div><div class="layer highlight">Shared application workflow + authorization + delegation + audit<br><small style="font-weight:400;color:#c3d4df">Local implementations of Altinn concepts, not actual Altinn services</small></div><div class="arrow">↓ ↑</div><div class="branches"><div class="layer">🪪 Civil registry<br><small>mock</small></div><div class="layer">🚘 DoTM<br><small>mock</small></div><div class="layer">🏢 Business registry<br><small>mock</small></div></div><div class="arrow">↓ ↑</div><div class="layer">Nagarik App-style inbox + verifiable decision reference (mock)</div></div>';
 }
+function nativeAltinn(){
+ return hero("Official Altinn source · supported local stack",
+ "Native Altinn Apps.<br>BPMN and XACML.",
+ "This repository contains an actual .NET Altinn App with a service model, process, XACML policy and Altinn UI. LocalTest emulates shared Norwegian platform APIs. No production Nepali institution is connected.",
+ '<a class="btn primary" href="http://local.altinn.cloud:8000" target="_blank" rel="noopener">Open native Altinn ↗</a><button class="btn ghost" data-nav="ecosystem">Explore integration stubs</button>',
+ stepAside(["Start Altinn LocalTest with studioctl","Run real Altinn App runtime","Log in with LocalTest test user","Submit the native Altinn application"],"Native execution path"))+
+ '<div class="section-heading"><div><h2>Native versus emulated</h2><p>Every layer is labelled precisely.</p></div></div><div class="grid three">'+
+ feature("⚙","ACTUAL: Altinn Apps","Altinn.App.Api/Core, native form UI, model and process engine.")+
+ feature("📋","ACTUAL: BPMN and XACML","Official Altinn app process and access policy, evaluated within the local stack.")+
+ feature("🗄","EMULATED: Shared platform","LocalTest emulates storage, authentication and authorization APIs. National services are not deployed.")+
+ '</div><div class="callout warn gap-top"><strong>Start this separately from Docker Compose</strong><code class="endpoint">bash scripts/start-native.sh</code><p>Requires .NET 10, studioctl and Docker/Podman. LocalTest user accounts are separate from the sandbox Keycloak users.</p></div>'+
+ '<div class="section-heading"><h2>Nepal registry integration</h2></div><div class="card"><h3>Native instantiation prefill</h3><p>The Altinn App registers a real IInstantiationProcessor and calls a replaceable INepalRegistryClient. That client currently returns synthetic licence information; no DoTM API is connected.</p><span class="status submitted">SYNTHETIC ADAPTER</span></div>';
+}
+
 function landing(){
   const cards = [
     ["👤","Citizen","Sign in, prefill from registries, submit, track a licence correction."],
@@ -172,12 +187,12 @@ function audit(){
  '<div class="callout warn gap-top"><strong>These are demonstration metrics, not evidence of national impact.</strong> A pilot should measure development effort, processing time, support load, reliability and actual costs.</div></div></div>';
 }
 function render(){
- const title={overview:"Government service overview",services:"Apply for a service",cases:"Applications & decisions",delegations:"Representation & permissions",officer:"DoTM agency workspace",inbox:"Citizen service inbox",ecosystem:"Connected government map",audit:"Oversight & audit"}[state.page]||"Nepal Digital Government";
+ const title={overview:"Government service overview",native:"Native Altinn application",services:"Apply for a service",cases:"Applications & decisions",delegations:"Representation & permissions",officer:"DoTM agency workspace",inbox:"Citizen service inbox",ecosystem:"Connected government map",audit:"Oversight & audit"}[state.page]||"Nepal Digital Government";
  const r=role(), allowed=pages.some(p=>p[0]===state.page && p[3](r));
  if(!allowed)state.page="overview";
  let content;
- if(!state.me)content=state.page==="ecosystem"?'<div class="section-heading"><h2>Architecture preview</h2></div>'+architecture()+'<div class="actions"><a class="btn dark" href="/auth/login">Sign in to interact →</a></div><div class="mini-note">Only NepalID is a real local OIDC connection. No Nepali government system is connected.</div>':landing();
- else content=({overview,services,cases,delegations,officer,inbox,ecosystem,audit}[state.page]||overview)();
+ if(!state.me)content=state.page==="native"?nativeAltinn():state.page==="ecosystem"?'<div class="section-heading"><h2>Architecture preview</h2></div>'+architecture()+'<div class="actions"><a class="btn dark" href="/auth/login">Sign in to interact →</a></div><div class="mini-note">Only NepalID is a real local OIDC connection. No Nepali government system is connected.</div>':landing();
+ else content=({overview,native:nativeAltinn,services,cases,delegations,officer,inbox,ecosystem,audit}[state.page]||overview)();
  layout(content,title);
 }
 root.addEventListener("click",async(ev)=>{
