@@ -1,4 +1,5 @@
 using Altinn.App.Api.Extensions;
+using Altinn.App.Logic;
 using Altinn.App.Api.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -9,7 +10,10 @@ using Microsoft.OpenApi.Models;
 
 void RegisterCustomAppServices(IServiceCollection services, IConfiguration config, IWebHostEnvironment env)
 {
-    // Register your apps custom service implementations here.
+    // Native Altinn IInstantiationProcessor prefill backed by a replaceable Nepal registry adapter.
+    services.AddSingleton<INepalRegistryClient, SyntheticNepalRegistryClient>();
+    services.AddTransient<Altinn.App.Core.Features.IInstantiationProcessor, NepalRegistryPrefill>();
+    // Register other custom service implementations here.
 }
 
 // ###########################################################################
