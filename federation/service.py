@@ -14,6 +14,7 @@ import json
 import os
 import re
 import secrets
+import ssl
 import sqlite3
 import time
 import uuid
@@ -43,11 +44,11 @@ CLIENTS = {"interagency-broker", "agency-transport-probe"}
 
 def agency_tls_client(timeout=5):
     """Mutual-TLS transport for cross-institution calls (local demo CA)."""
-    return httpx.AsyncClient(
-        timeout=timeout,
-        verify="/pki/ca.crt",
-        cert=("/pki/tls.crt", "/pki/tls.key"),
-    )
+    # Load the client chain into an explicit SSLContext so it is always
+    # presented during a real mutual-TLS handshake.
+    context = ssl.create_default_context(cafile="/pki/ca.crt")
+    context.load_cert_chain(certfile="/pki/tls.crt", keyfile="/pki/tls.key")
+    return httpx.AsyncClient(timeout=timeout, verify=context, trust_env=False)
 
 PRESENTATION_CHANNEL = "LOCAL_PRESENTATION_ONLY"
 _jwks = None
