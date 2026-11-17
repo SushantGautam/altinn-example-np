@@ -1,72 +1,46 @@
-# A common foundation for government services in Nepal
+# Exploring shared digital services for Nepal
 
-**Brief for government officials, secretaries, parliamentarians, advisers, and potential implementation partners**
+**Discussion note for government leaders and implementation partners**
 
-## The idea in one minute
+## The question
 
-Nepal has **Nagarik App on mobile phones**. People can use one familiar place to reach different government services. But every office still needs reliable systems behind the screen: collect an application, check records, verify authority, send it to the right officer, make a decision and inform the applicant.
+Nagarik App already gives people a familiar mobile entry point to government services. Behind each service, however, agencies still need forms, verified records, processing rules, staff permissions and a way to report decisions.
 
-**We are not asking Nepal to replace Nagarik App.** We are exploring whether reusable components from Norway's **Altinn** could help agencies build and operate these behind-the-scenes processes more consistently.
+Could Nepal reuse common components for those tasks instead of every institution building and maintaining them separately?
 
-Today, Nagarik App is mobile-focused. In the future, **Nagarik Web** could offer the same services through a browser, subject to government plans, trustworthy login, privacy and approval. Both channels can use common government services; the mobile app need not be discarded.
+Norway's Altinn is one possible reference. This project explores its application technology and the work required to connect shared services. **It does not propose replacing Nagarik App**, and it does not assume that Nepal lacks similar capabilities.
 
-> **Plain-language example:** A citizen corrects a driving licence address. Their trusted login confirms who they are. The transport department receives the request, checks existing records, an authorized officer reviews it, and the citizen receives a result in their service inbox. The person should not have to carry the same document from one office to another.
+## An example
 
-## What would be new?
+A resident needs to correct information on a driving licence. In a future authorized service, the resident would sign in using an approved Nepali identity system, review information already held by government, submit a correction, and receive a clear decision. The responsible department would remain in control of the record and its decision.
 
-| Today / common challenge | Proposed shared capability | Why a ministry might care |
-|---|---|---|
-| Each service may build a separate form and process | Reusable service builder and processing workflow | Agencies can reuse components rather than rebuild everything |
-| Identity is checked in multiple places | Government-approved identity integration | The same trusted identity can be recognized across eligible services |
-| Someone needs to apply for a business | Permission to act on behalf of a company | An accountant can be authorized **without sharing the director's password** |
-| An application moves between desks | Visible status, review tasks and event history | Easier follow-up and accountability |
-| Existing records sit in other systems | Controlled connections to agency registries | Less repeated data entry, while agencies remain owners of their records |
-| Citizens use different devices | Mobile today, and possibly web later | One service back end can serve several approved access channels |
+A related example concerns businesses. A company director could give an accountant permission to submit a specified form without handing over a password, and revoke that permission later.
 
-This is a **potential architecture**, not proof that these problems have all been solved by the current demonstration or that no similar Nepal solution exists.
+These examples are useful because they test data access, representation, workflow and accountability—not just how a form looks.
 
-## The demonstration we built
+## What we can show today
 
-**Part A — Genuine Altinn application:** a working Altinn App using its own .NET runtime, form, BPMN process and access policy. For local development, Altinn's official **LocalTest** software stands in for several national shared services.
+The repository contains a genuine Altinn .NET application running locally with Altinn's development emulators. It also has a separate browser-based Nepal service simulator showing citizen submissions, officer decisions, business delegation and a mock inbox. A limited connector passes synthetic data between the native application and mock services.
 
-**Part B — Nepal public-service illustration:** a web page on a presentation laptop shows the experiences of a citizen, transport officer, business director, accountant and government observer. It uses made-up records and a local demonstration login. **It is not Nagarik Web.**
+The simulator is **not Nagarik App or Nagarik Web**. Its officer and delegation features are **not backed by the production Altinn authorization platform**. There is no live Nepal identity, transport register or government integration. All demonstration records are fictional.
 
-**Small connection between them:** native Altinn can ask a mock transport registry for a licence reference and send a minimal task-completion notification to a mock Nagarik inbox.
+## Where the government would need to decide
 
-The presentation can demonstrate a realistic **journey**, but not live national integration, real licence issuance, actual Nepal digital identity, or genuine Altinn business-delegation services.
+| Question | Proposed approach |
+| --- | --- |
+| Does this duplicate existing programmes? | Compare components against the current national digital-transformation architecture before committing to a pilot. |
+| Who owns the service and its data? | Keep an accountable Nepali agency as the process and record owner. |
+| How would a person log in? | Integrate an approved Nepal identity provider; Norway's BankID is not part of this package. |
+| Can one agency act for another? | Agree legal authority, registry access, service credentials, logging and audit requirements. |
+| Who would run the platform? | Test hosting, security, operations, local engineering capacity and long-term cost. |
+| How do we judge value? | Measure implementation effort, applicant and officer burden, reliability, accessibility and maintenance costs. |
 
-## A low-risk first pilot
+## A sensible first step
 
-Consider **one voluntary agency** and **one administrative service** with a legally permissible digital workflow, a clear process owner and test data.
+Invite one willing institution to select a low-risk administrative service. Appoint a service owner and technical counterpart. Agree on synthetic or approved test records, an identity test environment, security responsibilities and success criteria.
 
-For a licence-correction *example*, the team would:
+Build and test one working end-to-end service, then a second small service that reuses the same components. Review the results before considering any wider adoption.
 
-1. Show identity verification with fictional accounts; agree how an approved Nepal identity provider would replace it.
-2. Show prefilled data from a synthetic public/transport registry.
-3. Submit a request through a real Altinn app form.
-4. Show a workflow step and the connection to a mock notification inbox.
-5. Add agency review and genuine business delegation only after the responsible institutions agree on requirements, authority and API access.
+**Decision requested:** support a limited technical discovery and pilot design—not approval to replace national systems or deploy Altinn nationwide.
 
-Measure **time to build a second service**, applicant effort, processing effort, accessibility, support load, reliability and operating cost. Do **not** promise a numerical savings percentage without measuring it.
-
-## What a Nepal institution must decide
-
-- Who would own and operate shared services and the data they process?
-- Which ministry/agency can authorize the pilot and provide an accountable service owner?
-- Which Nepal identity provider can legally confirm users and organisations, at what assurance level?
-- How does this fit current Nagarik App and national digital-transformation efforts?
-- What records may be shared, and under which legal and security controls?
-- What must remain in the transport department versus common infrastructure?
-- How will Nepal train engineers, maintain the software, and avoid long-term dependence on external vendors?
-
-## What is **not** being claimed
-
-This repository does **not** contain a complete, independently operated production version of all Norway's Altinn shared microservices. It does **not** include BankID, Nepal's national identity provider, live Nagarik App integration, or real DoTM/registry APIs. The existing multi-role officer and delegated-access flow is still an **illustrative simulator**.
-
-It is a **working technical starting point** for evaluating the possible architecture, not a government procurement decision or a finished national system.
-
-## Proposed next meeting outcome
-
-Ask for agreement on a **small technical discovery and pilot design**, not immediate nationwide adoption: one agency, a named technical counterpart, a test identity environment, agreed non-sensitive data/API contracts, and measurable acceptance criteria.
-
-**Further reading:** [Nepali-language brief](GOVERNMENT_BRIEF_NP.md) · [Presenter guide](PRESENTATION_SCRIPT.md) · [Engineering status](ALTINN_COMPONENT_STATUS.md).
+For technical detail, see the [architecture](ARCHITECTURE.md), [component status](ALTINN_COMPONENT_STATUS.md) and [pilot plan](PILOT_PLAN.md). A [Nepali-language brief](GOVERNMENT_BRIEF_NP.md) is also available.
