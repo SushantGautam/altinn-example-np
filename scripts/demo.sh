@@ -100,6 +100,21 @@ up() {
   (cd "$APP" && studioctl run --mode container --detach)
   echo "Connecting the native Altinn container to synthetic Nepal registry/inbox endpoints..."
   ensure_native_connection
+  # Attaching a secondary Docker network can briefly interrupt LocalTest's
+  # app proxy. If curl is installed, wait until its public route recovers.
+  if command -v curl >/dev/null 2>&1; then
+    local status="000"
+    for ((tries=1; tries<=25; tries++)); do
+      status="$(curl --silent --output /dev/null --write-out '%{http_code}' --header 'Host: local.altinn.cloud' http://127.0.0.1:8000/ttd/nepal-licence/ || true)"
+      if [[ "$status" =~ ^(200|301|302|303|307|308)$ ]]; then
+        break
+      fi
+      sleep 2
+    done
+    if [[ ! "$status" =~ ^(200|301|302|303|307|308)$ ]]; then
+      echo >&2 "Note: Altinn returned HTTP $status; inspect ./demo logs if the browser route remains unavailable."
+    fi
+  fi
   cat <<'MSG'
 
 All demo runtime services are containerized.
