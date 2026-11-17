@@ -7,6 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="$ROOT/native-altinn/nepal-licence"
 ENV_FILE="$ROOT/.demo.local.env"
 PROJECT="altinn-nepal"
+FEDERATION_PROJECT="altinn-federation"
 APP_CONTAINER="localtest-app-nepal-licence"
 NETWORK="${PROJECT}_default"
 
@@ -16,9 +17,9 @@ Nepal × Altinn demo — all runtime services in Docker
 
   ./demo up             Build and start all containers
   ./demo down           Stop all demo containers (keep data volumes)
-  ./demo status         Show running containers and LocalTest status
+  ./demo status         Show agency containers, gateways and LocalTest status
   ./demo logs           Show simulator and native Altinn logs
-  ./demo clean --yes    Stop and remove simulator data volume
+  ./demo clean --yes    Stop and remove ALL synthetic state volumes
   ./demo help           Show this help
 
 Requires Docker Compose v2 + official studioctl preview CLI on the host.
@@ -64,6 +65,20 @@ compose() {
   fi
 }
 
+federation() {
+  # The independent agency / integration Compose stack only joins the
+  # externally named presentation network; records live in PRIVATE networks.
+  if [[ -f "$ENV_FILE" ]]; then
+    docker compose --project-name "$FEDERATION_PROJECT" \
+      --env-file "$ENV_FILE" --file "$ROOT/infra/federation/compose.yml" "$@"
+  else
+    # Federation requires the ephemeral demo token and must not run with one
+    # of the hard-coded development credentials for the Native Altinn bridge.
+    echo >&2 "Federation environment missing: run ./demo up"
+    return 2
+  fi
+}
+
 ensure_native_connection() {
   docker container inspect "$APP_CONTAINER" >/dev/null 2>&1 || {
     echo >&2 "Could not find native Altinn app container '$APP_CONTAINER'"; exit 1;
@@ -78,7 +93,7 @@ ensure_native_connection() {
   # network. 'portal' is resolvable as a service name on that network.
   local tmp
   tmp="$(mktemp)"
-  (umask 077; printf '{"Token":"%s","DotmUrl":"http://portal:8000/api/stubs/dotm/licence","NagarikUrl":"http://portal:8000/api/integrations/native-altinn/events"}\n' "$NATIVE_WEBHOOK_TOKEN" > "$tmp")
+  (umask 077; printf '{"Token":"%s","DotmUrl":"http://exchange-broker:8000/v1/native/dotm","NagarikUrl":"http://exchange-broker:8000/v1/native/events"}\n' "$NATIVE_WEBHOOK_TOKEN" > "$tmp")
   if ! docker cp "$tmp" "$APP_CONTAINER:/tmp/altinn-nepal-bridge.json"; then
     rm -f "$tmp"
     echo >&2 "Unable to inject synthetic bridge configuration"; exit 1
@@ -94,6 +109,8 @@ up() {
   cd "$ROOT"
   echo "Starting Nepal presentation portal and Keycloak in Docker..."
   compose up --build -d
+  echo "Starting three independently networked fictional agency registries and OAuth-protected exchange..."
+  federation up --build -d
   echo "Starting official Altinn LocalTest platform containers..."
   (cd "$APP" && studioctl env up)
   echo "Building and running the genuine Altinn application as a container..."
@@ -120,11 +137,16 @@ up() {
 All demo runtime services are containerized.
   Native Altinn:  http://local.altinn.cloud:8000/ttd/nepal-licence/
   Nepal portal:   http://localhost:8085
+  Agency exchange dashboard: http://localhost:8090
   Keycloak:       http://localhost:8081
 
-Identity systems are separate. LocalTest emulates shared Altinn national
-services. Government APIs, Nagarik mobile app and national identity are
-NOT connected. Test users and records are synthetic.
+Three agency private networks and a separate exchange network now isolate the
+fictional transport, civil and company registries. Gateways validate signed
+OAuth machine tokens issued by local Keycloak. Native Altinn connects ONLY
+to the exchange bridge, which calls agency APIs.
+
+LocalTest still emulates Altinn's national shared services; none of the mock
+agency records, ID providers or Nagarik UI are real government connections.
 
 Stop: ./demo down
 Erase simulator data: ./demo clean --yes
@@ -141,6 +163,9 @@ down() {
     echo >&2 "studioctl unavailable: LocalTest-managed containers may remain running."
   fi
   if command -v docker >/dev/null && docker compose version >/dev/null 2>&1; then
+    if [[ -f "$ENV_FILE" ]]; then
+      federation down --remove-orphans || true
+    fi
     compose down --remove-orphans || true
   fi
   rm -f "$ENV_FILE"
@@ -150,6 +175,7 @@ down() {
 status() {
   cd "$ROOT"
   compose ps
+  if [[ -f "$ENV_FILE" ]]; then federation ps; fi
   if command -v studioctl >/dev/null; then
     (cd "$APP" && studioctl env status) || true
   fi
@@ -159,6 +185,7 @@ status() {
 logs() {
   cd "$ROOT"
   compose logs --tail 60 portal identity || true
+  if [[ -f "$ENV_FILE" ]]; then federation logs --tail 60 exchange-broker transport-edge civil-edge company-edge || true; fi
   if command -v studioctl >/dev/null; then
     (cd "$APP" && studioctl app logs) || true
   fi
@@ -170,11 +197,19 @@ clean() {
     echo >&2 "Confirm with: ./demo clean --yes"
     exit 2
   fi
-  down
+  # Remove named volumes only from our two synthetic Compose projects.
+  # Never delete unrelated/official Altinn LocalTest persistence.
   cd "$ROOT"
-  compose down --volumes --remove-orphans
-  echo "Nepal simulator volume deleted. Official LocalTest's separately managed data may remain."
-  echo "To reset LocalTest too, consult: studioctl env reset --help"
+  if [[ -f "$ENV_FILE" ]]; then
+    federation down --volumes --remove-orphans || true
+  fi
+  compose down --volumes --remove-orphans || true
+  if command -v studioctl >/dev/null; then
+    (cd "$APP" && { studioctl stop || true; studioctl env down || true; })
+  fi
+  rm -f "$ENV_FILE"
+  echo "Removed simulated portal, separate agency-registry and broker audit volumes."
+  echo "Altinn LocalTest data remains owned by studioctl; review its reset tools separately."
 }
 
 case "${1:-help}" in
