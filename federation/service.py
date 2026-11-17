@@ -181,23 +181,25 @@ def audit(agency: str, reference: str, action: str, outcome: str, code: int, det
     return correlation_id
 
 
-async def oauth_client_token():
+async def oauth_client_token(client_id=None, client_secret=None):
     global _cached_token, _token_expires
-    if _cached_token and time.time() < _token_expires - 15:
+    default_client = client_id is None
+    if default_client and _cached_token and time.time() < _token_expires - 15:
         return _cached_token
     params = {
         "grant_type": "client_credentials",
-        "client_id": os.getenv("OAUTH_CLIENT_ID", "interagency-broker"),
-        "client_secret": os.getenv("OAUTH_CLIENT_SECRET", ""),
+        "client_id": client_id or os.getenv("OAUTH_CLIENT_ID", "interagency-broker"),
+        "client_secret": client_secret if client_secret is not None else os.getenv("OAUTH_CLIENT_SECRET", ""),
     }
     try:
         async with httpx.AsyncClient(timeout=6) as client:
             response = await client.post(os.environ["KEYCLOAK_TOKEN_URL"], data=params)
             response.raise_for_status()
             data = response.json()
-        _cached_token = data["access_token"]
-        _token_expires = time.time() + int(data.get("expires_in", 40))
-        return _cached_token
+        if default_client:
+            _cached_token = data["access_token"]
+            _token_expires = time.time() + int(data.get("expires_in", 40))
+        return data["access_token"]
     except (httpx.HTTPError, KeyError, ValueError) as error:
         raise HTTPException(503, "Identity provider is temporarily unavailable") from error
 
@@ -296,6 +298,17 @@ if MODE == "broker":
         if agency not in AGENCIES:
             raise HTTPException(404, "Agency not in synthetic demo")
         return await contact_agency(agency, AGENCIES[agency][0], None)
+
+    @app.get("/v1/demo/limited/{agency}")
+    async def demonstrate_least_privilege(agency: str):
+        # This genuine OAuth service account can READ TRANSPORT ONLY.
+        # Other agency gateways must reject its signed, valid access token.
+        if agency not in AGENCIES:
+            raise HTTPException(404, "Agency not in synthetic demo")
+        token = await oauth_client_token(
+            "agency-transport-probe", "transport-local-example-secret-change-me"
+        )
+        return await contact_agency(agency, AGENCIES[agency][0], token)
 
     @app.get("/v1/native/dotm")
     async def native_prefill(request: Request):
