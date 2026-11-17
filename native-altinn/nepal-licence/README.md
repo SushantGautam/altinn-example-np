@@ -6,7 +6,7 @@ App ID: **`ttd/nepal-licence`** (`ttd` is a Norwegian local test organisation id
 
 ## Start
 
-Requires Docker/Podman/Colima, **.NET 10 SDK**, and `studioctl` ([official installation and usage](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/)).
+For the all-Docker showcase, install Docker/Compose and the official `studioctl` CLI on the host ([instructions](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/)). A host .NET 10 SDK is **not required**; the build SDK is inside Docker. Engineers may optionally install .NET for process-mode development.
 
 From the repository root:
 
@@ -21,7 +21,7 @@ Or, after installing `studioctl`:
 cd native-altinn/nepal-licence
 studioctl doctor
 studioctl env up
-studioctl run
+studioctl run --mode container --detach
 ```
 
 Use a **LocalTest test user** at the native app login. The Nepal simulator's `asha`, `maya`, `raj`, `priya`, and `kiran` Keycloak credentials **cannot** sign in to this app. There is **no NepalID or BankID integration**.
@@ -44,7 +44,7 @@ Use a **LocalTest test user** at the native app login. The Nepal simulator's `as
 
 ```bash
 # From the repository root:
-bash scripts/start-all.sh
+./demo up
 ```
 
 Native Altinn uses **http://local.altinn.cloud:8000/ttd/nepal-licence/**, and the separate Nepal presentation simulator uses **http://localhost:8085**.
@@ -67,3 +67,7 @@ dotnet build native-altinn/nepal-licence/App/App.csproj --configuration Release
 The `native-altinn.yml` and `native-localtest.yml` workflows run these checks and start the actual native app/LocalTest stack in CI.
 
 **Use fictional records only; never enter real personal or licence data.** Upstream: [source attribution](UPSTREAM.md). Detailed guides: [developer handbook](../../docs/DEVELOPER_GUIDE.md), [component status](../../docs/ALTINN_COMPONENT_STATUS.md), [native integration roadmap](../../docs/NATIVE_ALTINN_PATH.md).
+
+## Docker container lifecycle
+
+The official `studioctl run --mode container` builds and starts the genuine Altinn App container (`localtest-app-nepal-licence`). `./demo up` additionally starts Keycloak/portal via Compose, joins the native app to the synthetic portal network, and injects an ephemeral bridge config into `/tmp/altinn-nepal-bridge.json` without baking a token into the image. `./demo down` stops both environments; LocalTest emulators remain emulators. [Docker operations](../../docs/DOCKER.md).

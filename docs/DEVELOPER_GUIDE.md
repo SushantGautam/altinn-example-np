@@ -6,8 +6,7 @@ This guide documents the **implemented system** as of 17 November 2026. Read [ar
 
 - Git and a local computer (Linux/macOS/Windows with a suitable shell).
 - Docker Engine/Desktop with Docker Compose **v2**; enough memory for Keycloak and Altinn LocalTest images.
-- **.NET 10 SDK** as pinned in `native-altinn/nepal-licence/global.json`.
-- **Python 3** for the combined launcher’s ephemeral local integration token.
+- **No host .NET SDK or Python is required** to launch the default all-Docker showcase. Its native .NET 10 SDK is inside the Docker build; Bash creates the local token. Install a host .NET SDK only if deliberately running `studioctl --mode process` for development. Python is needed for local Python tests, not startup.
 - **studioctl** CLI (currently preview): [official installer and platform-specific instructions](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/).
 - For tests: Python packages in `api/requirements.txt`. Node.js for checking browser JS syntax in CI.
 
@@ -25,7 +24,7 @@ bash scripts/start-native.sh
 
 - App: **http://local.altinn.cloud:8000/ttd/nepal-licence/**
 - LocalTest login with a test user. **Keycloak users cannot sign in.**
-- Start script calls `studioctl doctor`, `studioctl env up` and `studioctl run --detach` from the app repository.
+- Start script calls `studioctl env up` and **`studioctl run --mode container --detach`**. The native app is a Docker container; shared LocalTest services are also containerized emulators.
 - With no fake HTTP bridge configured, the native registry adapter returns a synthetic fallback and the notification hook does nothing.
 
 To stop:
@@ -60,20 +59,20 @@ docker compose down -v
 ### Mode 3 — combined showcase (for meetings)
 
 ```bash
-bash scripts/start-all.sh
+./demo up
 ```
 
 - Genuine native Altinn app: **http://local.altinn.cloud:8000/ttd/nepal-licence/**
 - Nepal web simulator: **http://localhost:8085**
 - Keycloak: **http://localhost:8081**
 
-`start-all.sh` creates an ephemeral token, exports the local mock DoTM lookup and mock Nagarik event URL to the native `studioctl` app, then launches the separate presentation containers on port 8085. The native app can fetch a synthetic licence at instance creation and send an event at task completion. **Neither login is shared.** No official Nagarik web service is running.
+`./demo up` starts the Nepal portal/Keycloak through Docker Compose and official Altinn LocalTest/native app containers through `studioctl --mode container`. It creates a restricted local token, joins the native app to the simulator's private Docker network and injects a read-protected config file into the **running container**—no secrets are baked into images. The native hooks can query fake DoTM data and publish mock task events. **Neither login is shared.** There is no official Nagarik web deployment. See [Docker guide](DOCKER.md).
 
 ```bash
-bash scripts/stop-all.sh
+./demo down
 ```
 
-If a detached native process was started before changing environment variables, stop/restart the native app to pick up the new bridge variables.
+For native C# changes, use `./demo down` then `./demo up` to rebuild the image. The token/configuration bridge is injected after container startup; host environment variables are not automatically forwarded into `studioctl --mode container`.
 
 ## Repository layout
 
@@ -86,6 +85,8 @@ If a detached native process was started before changing environment variables, 
 | `native-altinn/nepal-licence/App/ui/*` | Native Altinn form layouts and resources |
 | `native-altinn/nepal-licence/App/logic/NepalRegistryPrefill.cs` | Native instantiation hook; synthetic DoTM HTTP adapter/fallback |
 | `native-altinn/nepal-licence/App/logic/NativeNagarikTaskEnd.cs` | Native task-completed hook; synthetic callback |
+| `native-altinn/nepal-licence/App/logic/LocalDemoBridge.cs` | Runtime-injected ephemeral bridge settings for native container |
+| `demo`, `scripts/demo.sh` | All-runtime-container launcher, logs, status and teardown |
 | `identity/nepal-realm.json` | Demo Keycloak realm/accounts; **not** government identities |
 | `api/main.py`, `api/connectors.py` | Simulator API, role logic and mocked records |
 | `api/static/index.html`, `app.js`, `style.css` | Demo web presentation |
@@ -114,7 +115,7 @@ node --check api/static/app.js
 docker compose config --quiet
 ```
 
-Run `scripts/smoke_oidc.py` only with the simulator and Keycloak services **running**; for port 8085 set `PORTAL_BASE_URL=http://localhost:8085`. Combined LocalTest tests are in GitHub Actions **`native-localtest.yml`**; CI starts and stops the containers.
+Run `scripts/smoke_oidc.py` only with the simulator and Keycloak services **running**; for port 8085 set `PORTAL_BASE_URL=http://localhost:8085`. **All-container startup, mock bridge, login and teardown** are validated in `containerized-native.yml` without installing a host .NET SDK. `native-localtest.yml` retains a separate legacy host-process development test.
 
 **Known gap:** green tests do not yet show an automated native Altinn browser filling the form and advancing the BPMN task to produce a callback. Adding that scenario is useful before a high-stakes live presentation.
 
@@ -124,9 +125,9 @@ Run `scripts/smoke_oidc.py` only with the simulator and Keycloak services **runn
 |---|---|---|
 | `PORTAL_PORT` | Docker Compose host port | 8000 simulator alone, 8085 combined |
 | `PORTAL_BASE_URL` | Simulator OIDC callback | `http://localhost:8000` or `http://localhost:8085` |
-| `NATIVE_WEBHOOK_TOKEN` | Native hook and FastAPI | Shared ephemeral **local demo** token |
-| `DOTM_MOCK_REGISTRY_URL` | Native `IInstantiationProcessor` adapter | Local synthetic licence lookup |
-| `NAGARIK_DEMO_WEBHOOK_URL` | Native `IProcessTaskEnd` adapter | Local synthetic event receiver |
+| `NATIVE_WEBHOOK_TOKEN` | Simulator and runtime bridge file | Random local demo token in ignored `.demo.local.env` |
+| `DOTM_MOCK_REGISTRY_URL` | Optional process mode; Docker mode reads `/tmp/altinn-nepal-bridge.json` | Synthetic lookup at `http://portal:8000` inside Docker |
+| `NAGARIK_DEMO_WEBHOOK_URL` | Optional process mode; Docker mode reads the injected file | Synthetic event receiver at `http://portal:8000` inside Docker |
 | `DB_PATH` | Simulator | Local SQLite database path |
 | `OIDC_ISSUER`, `OIDC_INTERNAL` | Simulator | Browser and container endpoint for Keycloak |
 | `SESSION_SECRET` | Simulator | Development-only signing secret; not for production |
@@ -163,7 +164,7 @@ Full route definitions and hypothetical future agency contracts: [integration co
 
 | Symptom | Likely cause / action |
 |---|---|
-| Port 8000 already in use | Another stack started in standalone mode. Stop it, then `start-all.sh`. |
+| Port 8000 already in use | Another stack started in standalone mode. Stop it, then `./demo up`. |
 | Keycloak login fails at first | The identity container is still starting. Inspect `docker compose logs -f identity`. |
 | `studioctl` not found | Install the preview CLI via official docs and ensure it is on your PATH. |
 | .NET build failure | Verify `dotnet --info`, selected SDK and NuGet network access. |
@@ -179,3 +180,7 @@ Full route definitions and hypothetical future agency contracts: [integration co
 **Development environment only.** All synthetic users, demo secrets, LocalTest roles, HTTP transport, simple HMAC document proof and SQLite permissions are unsuitable for public production. The repo contains **no national ID proofing**. Never enter real citizen data, and do not expose localhost services via public reverse proxies. A future government pilot requires identity assurance, secret storage, HTTPS/mTLS, lawfully scoped data, policy evaluation, audit, backups, monitoring, independent review and operations ownership.
 
 [Documentation index](README.md) · [Identity and channels](IDENTITY_AND_CHANNELS.md) · [Native component status](ALTINN_COMPONENT_STATUS.md).
+
+## Full Docker lifecycle
+
+The default launch is `./demo up`, and the matching stop command is `./demo down`. The native app is an official Altinn container built by `studioctl run --mode container`; the portal/Keycloak are Docker Compose containers. This is one command controlling two Docker environments, **not** one Compose file. `./demo clean --yes` additionally deletes simulator data but does not reset LocalTest's separately managed volumes. See [Docker operations](DOCKER.md).
