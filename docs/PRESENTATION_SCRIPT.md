@@ -1,82 +1,67 @@
-# Government demonstration — a 12-minute story, not a code walkthrough
+# Meeting walkthrough
 
-**Audience:** ministers, secretaries, senior civil servants, advisers and potential partners. The two windows use fictitious data. Introduce what is real and what is simulated before interacting with them.
+**Audience:** ministers, secretaries, agency leaders and technical partners  
+**Duration:** about 10 minutes  
+**Preparation:** run `./demo up`; confirm both local sites load before the meeting.
 
-## Opening in everyday language (about 1 minute)
+This demonstration is an independent reference project using fictional records. It is not connected to Nagarik App, a Nepal government register or a production Altinn platform.
 
-> “Nepal already has Nagarik App on mobile. We are not bringing another app to replace it. We are exploring a common system *behind* government services: the citizen submits something once; the correct office receives it; authorized officials act; the citizen is informed. If Nepal adds Nagarik Web in future, it could use the same services, subject to approved login and security.”
+## Opening (1 minute)
 
-A simple Nepali-language opening:
+Nepal already has Nagarik App. The purpose here is not to build another citizen app. We want to test whether several government institutions can reuse the same service-building tools, permissions and processing infrastructure while retaining control of their own records.
 
-> “नागरिक एप अहिले मोबाइलमा छ। यसलाई बदल्ने होइन। सरकारी कार्यालयका पछाडिका काम—निवेदन, अभिलेख जाँच, स्वीकृति र सूचना—एउटै साझा प्रविधिबाट सजिलो बनाउन सकिन्छ कि भनेर यो नमुना देखाउँदैछौँ। भविष्यमा वेब बने पनि उही सेवाको आधार प्रयोग गर्न सकिन्छ।”
+The project has two windows. One runs an actual Altinn application with official local test services. The other is a Nepal-focused simulator that illustrates the citizen and agency experience. **They do not have shared sign-in or a single production workflow.**
 
-## Preparation
+## Window 1: what the citizen and officer see (3 minutes)
 
-Launch the verified all-Docker showcase. Install Docker/Compose and the official `studioctl` CLI once; no host .NET SDK is needed:
+Open **http://localhost:8085**.
 
-```bash
-./demo up
-```
+1. Sign in as `asha` with `Demo123!`. Submit a fictional driving-licence correction.
+2. Sign out and sign in as `maya`. Show the transport officer's review and decision.
+3. Return to `asha` to show the case status and simulated inbox.
 
-Open two browser windows:
+Explain that the familiar front-end experience could eventually be available through approved government channels. This window is **not** the Nagarik mobile app, Nagarik Web or an official transport department system.
 
-- **Window A — Genuine Altinn App:** http://local.altinn.cloud:8000/ttd/nepal-licence/ (LocalTest users; official local platform emulators).
-- **Window B — Nepal ecosystem *web simulator*:** http://localhost:8085 (Keycloak fictional users).
+## Window 2: acting on behalf of a business (2 minutes)
 
-**Do not call Window B “Nagarik Web”.** Nagarik App is currently a mobile channel, while a web counterpart is a possible government evolution. The browser demonstration is simply a way for officials to **see the proposed ecosystem**.
+Remain in the simulator.
 
-## Part 1: Show the citizen and officer experience (3 minutes)
+1. Sign in as `raj`, a fictional company director.
+2. Grant `priya`, an accountant, permission to submit a specified transport-permit application.
+3. Sign in as `priya`, submit, then revoke the permission as `raj`.
+4. Show that a further attempt is refused.
 
-In Window B, use `asha / Demo123!` and explain that her licence details are fabricated. Submit a fake correction application. Switch identity to `maya / Demo123!` and show the government officer's review/decision. Switch back to `asha` and show the mock Nagarik inbox with the update.
+The important point is a limited, revocable permission without password sharing. This behavior is implemented in the simulator; it is **not yet genuine Altinn Access Management**.
 
-**Say:** “This shows what citizens and the agency might experience.”
+## Window 3: native Altinn and agency connections (3 minutes)
 
-**Do not say:** “We have connected the real Nagarik App or DoTM” or “this officer workflow is already native Altinn.”
+Open **http://local.altinn.cloud:8000/ttd/nepal-licence/**.
 
-## Part 2: Show why permissions matter (2 minutes)
+Use an **Altinn LocalTest** identity, not the Keycloak accounts above. Show the real Altinn form, its application process and its test-data prefill. The native application uses Altinn .NET libraries, UI configuration, BPMN and XACML. Shared Storage, Authentication, Authorization and Register APIs are provided by the official **LocalTest emulators**.
 
-In Window B, `raj` is a fictional company director. He grants `priya` a **single service permission**, without giving his password. Priya submits a sample company permit. Raj revokes her permission; Priya tries again and the simulator rejects her request.
+If the test environment is stable, submit a sample form and inspect the task event through the local integration. The CI suite checks startup and integration contracts, but does not yet automate every native browser action.
 
-**Say:** “We want a government-wide way to manage who is allowed to act for a company, citizen or institution.”
+For an engineering audience, open **http://localhost:8090** to show the synthetic interagency exchange dashboard. It uses separate Docker networks, locally generated certificates for mutual TLS, Keycloak service tokens and a demonstration event/audit flow. These are local examples, not government-accredited infrastructure.
 
-**Do not say:** “The native Altinn Access Management service is already deployed here.” It is **simulated** in Window B.
+## Close (1 minute)
 
-## Part 3: Prove that actual Altinn code is involved (3 minutes)
+A sensible next step would be a small technical pilot with one willing Nepali government institution, one service owner and a defined administrative process. The pilot should use test records and measure the time to build a service, the effort to reuse components, operational requirements and actual user benefit.
 
-Open Window A. Explain that the **native Altinn app** is not merely a mockup: it contains the official .NET app runtime, Altinn UI, BPMN process and XACML access policy. It is launched through **`studioctl`** with LocalTest API emulators, not national production microservices.
+**Request at the meeting:** nominate a policy contact and technical counterpart to assess feasibility against Nepal's current digital-government plans. Do not ask for a nationwide platform commitment.
 
-Log in using a LocalTest test identity (not Asha's Keycloak account). Show the licence form and fictional prefill. A native instantiation hook can call the protected **mock DoTM registry** when combined mode is enabled.
+## Questions likely to arise
 
-Submit synthetic data if the LocalTest UI allows completion in the meeting environment. **The automated pipeline currently verifies native startup and bridge endpoints; it does not verify the full browser form-to-callback journey.** If the submission cannot be completed, demonstrate the local test evidence rather than asserting that the callback fired.
+| Question | Short answer |
+| --- | --- |
+| Does this replace Nagarik App? | No. Nagarik can remain the mobile entry point. |
+| Is BankID included? | No. Nepal would need an approved identity provider and federation work. |
+| Is all of Altinn running here? | No. A genuine Altinn application runs against LocalTest emulators. |
+| Can officers and accountants use this today? | Only in the synthetic local simulator. |
+| Are agency records live? | No. All identities, companies, licences and decisions are fictional. |
+| Who would operate it in Nepal? | That is a core question for a government-led pilot. |
 
-The native BPMN hook *can* post an event to the simulator mock inbox when a data task ends. This is a **narrow synthetic bridge**, not verified person-to-person delivery or a real Nagarik notification API.
+## After the meeting
 
-## Part 4: Show ecosystem and decision (2 minutes)
+Run `./demo down` to stop the containers. It preserves local demonstration records. Use `./demo clean --yes` only when you intend to remove simulator data.
 
-In Window B, select **Ecosystem map**. Explain each layer in plain language:
-
-- Nagarik **mobile** today; possible government **web** channel later.
-- Approved Nepal digital identity would be required for real authentication.
-- Altinn-based shared service processing and rights could be evaluated.
-- DoTM, civil and company registers remain the authoritative data owners.
-- Citizens could receive results through channels authorized by government.
-
-Conclude with a narrow request: one willing agency, one low-risk administrative process, a technical contact, test data, and permission to agree on identity and API contracts. Measure results before considering scale.
-
-## Likely questions and direct answers
-
-**“Why not just expand Nagarik App?”** — Nagarik App can remain the mobile front door and may expand to web. The issue to test is whether agencies benefit from common back-end services and authorization rather than separate custom processes.
-
-**“Do we get BankID?”** — No. BankID is an external Norwegian identity provider. Nepal would need a legally accepted Nepal identity solution and configured federation.
-
-**“Is this the complete Altinn Platform?”** — No. The native Altinn App is real, but LocalTest emulates shared infrastructure. Full production services require independent deployment and integration work.
-
-**“Are the agency records real?”** — No. Every licence, ID, company and case in this showcase is fictional.
-
-**“Can citizens use it today?”** — Not for any real government purpose. It is a demonstrator for design and evaluation.
-
-After the meeting use `./demo down` to stop all runtime containers while preserving sample records. `./demo clean --yes` additionally removes the simulator data. See [Docker operations](DOCKER.md).
-
-## Presenter safety checklist
-
-Before a meeting, confirm both screens load, test accounts work, no real personal data is visible, the browser zoom fits the projector, and the [latest GitHub Actions](../.github/workflows/) are green. Use [component status](ALTINN_COMPONENT_STATUS.md) as the reference if a technical question goes beyond the demo.
+See [component status](ALTINN_COMPONENT_STATUS.md) and [architecture](ARCHITECTURE.md) for implementation details, and [pilot plan](PILOT_PLAN.md) for evaluation criteria.
