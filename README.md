@@ -86,6 +86,6 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change. Report securi
 
 ### Attribution and licensing
 
-The native application was adapted from the [Altinn Studio application template](https://github.com/Altinn/altinn-studio); see [upstream attribution](native-altinn/nepal-licence/UPSTREAM.md). Upstream licensing and any third-party notices must be preserved. **A project-wide license has not yet been selected; publication and reuse terms require maintainer review before public release.**
+The native application was adapted from the [Altinn Studio application template](https://github.com/Altinn/altinn-studio); see [upstream attribution](native-altinn/nepal-licence/UPSTREAM.md). Upstream licensing and any third-party notices must be preserved. The project is distributed under the [MIT License](LICENSE). The original Altinn source retains its copyright and license notice in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Confirm ownership and third-party notices before changing repository visibility.
 
 All names, credentials, company details and records in this project are fictional. Do not use real personal data, official government credentials or live registry tokens.
