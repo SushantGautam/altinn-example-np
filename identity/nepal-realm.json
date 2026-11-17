@@ -166,18 +166,34 @@
       "enabled": true,
       "serviceAccountClientId": "interagency-broker",
       "realmRoles": [
+        "default-roles-nepal-demo",
         "agency-transport-read",
         "agency-civil-read",
         "agency-company-read"
-      ]
+      ],
+      "emailVerified": true,
+      "totp": false,
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": []
     },
     {
       "username": "service-account-agency-transport-probe",
       "enabled": true,
       "serviceAccountClientId": "agency-transport-probe",
       "realmRoles": [
+        "default-roles-nepal-demo",
         "agency-transport-read"
-      ]
+      ],
+      "emailVerified": true,
+      "totp": false,
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "clientRoles": {},
+      "notBefore": 0,
+      "groups": []
     }
   ],
   "roles": {
