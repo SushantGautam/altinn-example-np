@@ -30,6 +30,23 @@ The separate sandbox Keycloak users cannot authenticate to the native app.
 **Not connected:** Nepal eID, Nagarik App, DoTM live registry, full national Altinn microservices.
 See the [component-status matrix](docs/ALTINN_COMPONENT_STATUS.md).
 
+## Start both local experiences side by side
+
+With `studioctl`, .NET 10 and Docker installed, run:
+
+```bash
+bash scripts/start-all.sh
+```
+
+- **Native Altinn App:** http://local.altinn.cloud:8000/ttd/nepal-licence/
+- **Nepal ecosystem presentation:** http://localhost:8085
+
+This launches two independent systems, *not* a federated integration between
+them. Native Altinn uses LocalTest test users; the sandbox uses Keycloak test users.
+Port 8085 prevents collision with the native Altinn gateway on port 8000.
+
+Stop with `bash scripts/stop-all.sh`.
+
 ## Presentation sandbox — separate illustrative experience
 
 The following Docker Compose stack remains a **standalone simulator** for the

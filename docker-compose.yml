@@ -15,7 +15,7 @@ services:
   portal:
     build: ./api
     environment:
-      PUBLIC_BASE_URL: http://localhost:8000
+      PUBLIC_BASE_URL: ${PORTAL_BASE_URL:-http://localhost:8000}
       OIDC_ISSUER: http://localhost:8081/realms/nepal-demo
       OIDC_INTERNAL: http://identity:8080/realms/nepal-demo
       OIDC_CLIENT_ID: nepal-demo
@@ -24,7 +24,7 @@ services:
       DB_PATH: /data/nepal.db
       DEMO_MODE: "true"
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${PORTAL_PORT:-8000}:8000"
     volumes:
       - demo-data:/data
     depends_on:
