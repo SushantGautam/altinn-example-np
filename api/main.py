@@ -34,6 +34,7 @@ OIDC_CLIENT_ID = os.getenv("OIDC_CLIENT_ID", "nepal-demo")
 OIDC_CLIENT_SECRET = os.getenv("OIDC_CLIENT_SECRET", "local-demo-only-change-me")
 SESSION_SECRET = os.getenv("SESSION_SECRET", "local-dev-only-change-me")
 DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
+NATIVE_WEBHOOK_TOKEN = os.getenv("NATIVE_WEBHOOK_TOKEN", "")
 
 # Roles are fixture data, NOT Norwegian or Nepali government role assertions.
 PEOPLE = {
@@ -75,7 +76,7 @@ def message(db, recipient, title, body, case_id):
 
 
 def reset_data(db):
-    for table in ("notifications", "events", "delegations", "cases"):
+    for table in ("native_deliveries", "notifications", "events", "delegations", "cases"):
         db.execute("DELETE FROM " + table)
     cases = [
         ("NP-SEED-01", "licence-correction", "asha", None, "approved",
@@ -95,6 +96,7 @@ def reset_data(db):
 def init_db():
     with conn() as db:
         db.executescript("""
+          CREATE TABLE IF NOT EXISTS native_deliveries (event_id TEXT PRIMARY KEY, source TEXT NOT NULL, instance_id TEXT NOT NULL, created_at TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS cases (
              id TEXT PRIMARY KEY, service TEXT NOT NULL, applicant TEXT NOT NULL,
              organisation_id TEXT, status TEXT NOT NULL, payload TEXT NOT NULL,
@@ -463,6 +465,41 @@ def reset(user=Depends(require_csrf)):
         event(db, user["username"], "DEMO_RESET", "Reset all simulated records")
         db.commit()
     return {"ok": True}
+
+
+@app.post("/api/integrations/native-altinn/events")
+def receive_native_altinn_event(payload: dict, request: Request):
+    """Local-only synthetic bridge from a REAL Altinn process hook.
+
+    This does not authenticate a Nepal government or Altinn platform service.
+    A runtime-generated shared token connects two laptop demo processes.
+    """
+    if not DEMO_MODE:
+        raise HTTPException(404)
+    supplied = request.headers.get("x-native-demo-token", "")
+    if not NATIVE_WEBHOOK_TOKEN or not supplied or not hmac.compare_digest(supplied, NATIVE_WEBHOOK_TOKEN):
+        raise HTTPException(403, "Invalid local demonstration integration token")
+    event_id = str(payload.get("event_id", ""))
+    instance_id = str(payload.get("instance_id", ""))
+    if (payload.get("source") != "ttd/nepal-licence"
+        or payload.get("event_type") != "native.altinn.task.completed"
+        or not 8 <= len(event_id) <= 128
+        or not 8 <= len(instance_id) <= 128
+        or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._/" for c in event_id + instance_id)):
+        raise HTTPException(422, "Invalid native Altinn synthetic event")
+    with conn() as db:
+        exists = db.execute("SELECT 1 FROM native_deliveries WHERE event_id=?", (event_id,)).fetchone()
+        if exists:
+            return {"accepted": True, "duplicate": True}
+        db.execute("INSERT INTO native_deliveries(event_id,source,instance_id,created_at) VALUES(?,?,?,?)",
+                   (event_id, "ttd/nepal-licence", instance_id, now()))
+        event(db, "native-altinn", "NATIVE_ALTINN_TASK_COMPLETED",
+              "Native Altinn instance " + instance_id + " completed its data task; delivered to synthetic Nagarik bridge")
+        message(db, "asha", "Native Altinn application update",
+                "A native Altinn app instance completed its submission task. Reference: " + instance_id
+                + ". This notification is a synthetic Nagarik App integration.", None)
+        db.commit()
+    return {"accepted": True, "duplicate": False}
 
 
 @app.get("/api/verify/{case_id}")

@@ -23,6 +23,7 @@ services:
       SESSION_SECRET: local-demonstration-not-for-public-deployment-change-me
       DB_PATH: /data/nepal.db
       DEMO_MODE: "true"
+      NATIVE_WEBHOOK_TOKEN: ${NATIVE_WEBHOOK_TOKEN:-}
     ports:
       - "127.0.0.1:${PORTAL_PORT:-8000}:8000"
     volumes:
