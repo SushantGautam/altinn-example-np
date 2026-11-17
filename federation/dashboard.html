@@ -77,6 +77,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#1a557d}
 <button class="btn" onclick="run('civil',false)">🪪 Read civil record</button>
 <button class="btn" onclick="run('company',false)">🏢 Read company record</button>
 <button class="btn warning" onclick="run('transport',true)">⛔ Attempt without a token</button>
+<button class="btn warning" onclick="limited()">🔒 Transport-only identity → company</button>
 </div>
 <div style="margin-top:16px" class="label">Result: access decision, trace ID and minimum returned fields</div>
 <pre id="result">Choose an agency above to see a live authenticated request.</pre>
@@ -105,6 +106,14 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#1a557d}
 const $=id=>document.getElementById(id);
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 async function load(path){const r=await fetch(path,{cache:"no-store"});const d=await r.json();if(!r.ok)throw Error(d.detail||"HTTP "+r.status);return d}
+async function limited(){
+  $("result").textContent="Presenting a valid transport-only OAuth token to company registry…";
+  try{
+    const d=await load("/v1/demo/limited/company");
+    $("result").textContent=JSON.stringify(d,null,2);
+  }catch(e){$("result").textContent="Request failed: "+e.message}
+  refresh();
+}
 async function run(agency,deny){
   $("result").textContent="Contacting "+agency+" agency gateway…";
   try {

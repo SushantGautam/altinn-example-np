@@ -64,6 +64,12 @@ status, response = request("/v1/demo/deny/transport")
 assert status == 200 and not response["allowed"] and response["edgeStatus"] == 401, response
 print("PASS: no bearer token denied by agency gateway")
 
+status, limited = request("/v1/demo/limited/company")
+assert status == 200 and limited["allowed"] is False and limited["edgeStatus"] == 403, limited
+status, permitted = request("/v1/demo/limited/transport")
+assert status == 200 and permitted["allowed"] is True, permitted
+print("PASS: valid, correctly signed transport-only token rejected by company agency")
+
 status, response = request("/v1/native/dotm")
 assert status == 403, response
 print("PASS: native Altinn synthetic bridge requires its separate local token")
