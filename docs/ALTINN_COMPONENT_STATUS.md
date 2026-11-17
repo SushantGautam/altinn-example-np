@@ -20,6 +20,8 @@
 | Altinn Authentication | **Official LocalTest emulator** | LocalTest user identities; no real BankID or approved Nepal issuer |
 | Altinn Authorization | **Official LocalTest emulator** | Tests app policy; no production access management/party delegation |
 | Altinn Register/Profile | **Official LocalTest emulator** | Synthetic LocalTest parties; not Nepal registries |
+| Isolated agency networks and mTLS | **Functional local federation example** in `infra/federation/compose.yml` | Separate Docker bridge networks, locally generated certificates and synthetic registries; not separate institutional infrastructure |
+| OAuth2 service exchange and broker | **Functional local federation example** in `federation/service.py` | Keycloak test machine identities, role checks and synthetic audit/outbox; not a government exchange platform |
 | Altinn Events/Dialogporten/correspondence | **Not deployed** as national services | Native custom task-end callback is **not** their replacement |
 | Separate simulator Keycloak | **Real OIDC protocol**, synthetic users | `ci.yml` tests OIDC and sign-ins; no identity proofing/assurance |
 | Simulator case workflow | **Functional simulator** in FastAPI/SQLite | Tests case creation/decision/inbox; **not native Altinn Apps** |
