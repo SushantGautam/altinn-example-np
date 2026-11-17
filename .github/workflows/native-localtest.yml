@@ -32,6 +32,10 @@ jobs:
         run: studioctl env up
       - name: Start actual Altinn App runtime
         working-directory: native-altinn/nepal-licence
+        env:
+          NATIVE_WEBHOOK_TOKEN: local-ci-bridge-test-token
+          DOTM_MOCK_REGISTRY_URL: http://127.0.0.1:8085/api/stubs/dotm/licence
+          NAGARIK_DEMO_WEBHOOK_URL: http://127.0.0.1:8085/api/integrations/native-altinn/events
         run: studioctl run --detach
       - name: Check the app is reachable through LocalTest
         run: |
@@ -46,6 +50,8 @@ jobs:
           echo "LocalTest gateway did not become reachable"
           exit 1
       - name: Start separate Nepal presentation portal on 8085
+        env:
+          NATIVE_WEBHOOK_TOKEN: local-ci-bridge-test-token
         run: PORTAL_PORT=8085 PORTAL_BASE_URL=http://localhost:8085 docker compose up --build -d
       - name: Verify both services can run simultaneously
         env:
@@ -58,6 +64,8 @@ jobs:
             sleep 4
           done
           curl --fail --silent http://localhost:8085/health
+          curl --fail --silent --header 'x-native-demo-token: local-ci-bridge-test-token' http://localhost:8085/api/stubs/dotm/licence | python -c 'import json,sys; r=json.load(sys.stdin); assert r["reference"].startswith("DL-NP-")'
+          curl --fail --silent --header 'x-native-demo-token: local-ci-bridge-test-token' --header 'Content-Type: application/json' --request POST --data '{"source":"ttd/nepal-licence","event_type":"native.altinn.task.completed","event_id":"native.ci.bridge.Task_1","instance_id":"CI-TEST/1234567890"}' http://localhost:8085/api/integrations/native-altinn/events
           python scripts/smoke_oidc.py
       - name: Stop Nepal presentation portal
         if: always()

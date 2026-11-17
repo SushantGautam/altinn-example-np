@@ -96,3 +96,12 @@ def test_local_native_altinn_callback_is_authenticated_idempotent_and_visible(cl
     act(client, "asha")
     messages = client.get("/api/inbox").json()["notifications"]
     assert len([x for x in messages if "Native Altinn" in x["title"]]) == 1
+
+
+def test_synthetic_dotm_registry_requires_local_bridge_token(client, monkeypatch):
+    monkeypatch.setattr(main, "NATIVE_WEBHOOK_TOKEN", "registry-test-token")
+    assert client.get("/api/stubs/dotm/licence").status_code == 403
+    response = client.get("/api/stubs/dotm/licence",
+                          headers={"x-native-demo-token": "registry-test-token"})
+    assert response.status_code == 200
+    assert response.json()["reference"] == "DL-NP-SYNTHETIC-001"
