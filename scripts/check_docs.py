@@ -46,7 +46,7 @@ for label, value in [("README", main), ("government", gov),
     assert "altinn" in lower, f"{label} must identify Altinn"
 assert "not a government channel" in ui.lower()
 assert "LocalTest" in main and "Keycloak" in main
-assert "not yet" in native.lower()
+assert "not implemented" in native.lower(), "Status matrix must identify absent capabilities"
 assert "ttd/nepal-licence" in main
 assert "http://localhost:8085" in main and "local.altinn.cloud:8000" in main
 assert "api/stubs/dotm/licence" in (ROOT/"api/main.py").read_text()
