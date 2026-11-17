@@ -195,20 +195,26 @@ logs() {
 
 clean() {
   if [[ "${1:-}" != "--yes" ]]; then
-    echo >&2 "Destructive action: removes only the Nepal simulator's persisted Docker volume."
+    echo >&2 "Destructive action: removes simulator, exchange audit, and all synthetic agency record volumes."
     echo >&2 "Confirm with: ./demo clean --yes"
     exit 2
   fi
-  # Remove named volumes only from our two synthetic Compose projects.
-  # Never delete unrelated/official Altinn LocalTest persistence.
+  # Remove named volumes from BOTH of our synthetic Compose projects.
+  # This must work even after ./demo down removed the ephemeral secret file.
+  # The placeholder is passed ONLY to docker compose for variable expansion.
   cd "$ROOT"
-  if [[ -f "$ENV_FILE" ]]; then
-    federation down --volumes --remove-orphans || true
-  fi
-  compose down --volumes --remove-orphans || true
   if command -v studioctl >/dev/null; then
     (cd "$APP" && { studioctl stop || true; studioctl env down || true; })
   fi
+  if [[ -f "$ENV_FILE" ]]; then
+    federation down --volumes --remove-orphans
+  else
+    NATIVE_WEBHOOK_TOKEN=cleanup-not-a-credential docker compose \
+      --project-name "$FEDERATION_PROJECT" \
+      --file "$ROOT/infra/federation/compose.yml" \
+      down --volumes --remove-orphans
+  fi
+  compose down --volumes --remove-orphans
   rm -f "$ENV_FILE"
   echo "Removed simulated portal, separate agency-registry and broker audit volumes."
   echo "Altinn LocalTest data remains owned by studioctl; review its reset tools separately."
