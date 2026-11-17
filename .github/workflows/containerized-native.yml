@@ -1,0 +1,61 @@
+name: Containerized native Altinn probe
+on:
+  push:
+    paths:
+      - '.github/workflows/containerized-native.yml'
+      - 'native-altinn/**'
+      - 'scripts/demo.sh'
+      - 'docker-compose.yml'
+  workflow_dispatch:
+jobs:
+  dockerized:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install official studioctl
+        run: |
+          curl --fail --silent --show-error --location https://altinn.studio/designer/api/v1/studioctl/install.sh -o /tmp/studioctl-install.sh
+          sh /tmp/studioctl-install.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Document supported container flags
+        working-directory: native-altinn/nepal-licence
+        run: |
+          studioctl run --help
+          studioctl app run --help || true
+      - name: Start Altinn official LocalTest emulators in containers
+        working-directory: native-altinn/nepal-licence
+        run: studioctl env up
+      - name: Run real Altinn App as a container
+        working-directory: native-altinn/nepal-licence
+        run: studioctl run --mode container --detach
+      - name: Check actual native Altinn app responds
+        run: |
+          docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
+          for i in $(seq 1 50); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: local.altinn.cloud" http://127.0.0.1:8000/ttd/nepal-licence/ || true)
+            if [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]; then
+              echo "Native Altinn app container route is reachable (HTTP $code)"
+              exit 0
+            fi
+            sleep 4
+          done
+          exit 1
+      - name: Verify at least one Altinn app-specific running container
+        run: |
+          studioctl env status || true
+          docker ps --format '{{.Names}} {{.Image}}'
+          docker ps --format '{{.Names}} {{.Image}}' | grep -Ei 'nepal-licence|ttd.*nepal|altinn.application'
+      - name: Diagnostics
+        if: failure()
+        working-directory: native-altinn/nepal-licence
+        run: |
+          studioctl app logs || true
+          studioctl env logs || true
+          docker ps -a || true
+      - name: Stop all official local Altinn resources
+        if: always()
+        working-directory: native-altinn/nepal-licence
+        run: |
+          studioctl stop || true
+          studioctl env down || true
