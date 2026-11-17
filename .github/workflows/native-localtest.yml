@@ -5,6 +5,9 @@ on:
     paths:
       - 'native-altinn/**'
       - 'scripts/start-native.sh'
+      - 'scripts/start-all.sh'
+      - 'docker-compose.yml'
+      - 'identity/nepal-realm.json'
       - '.github/workflows/native-localtest.yml'
 jobs:
   localtest:
@@ -42,6 +45,23 @@ jobs:
           done
           echo "LocalTest gateway did not become reachable"
           exit 1
+      - name: Start separate Nepal presentation portal on 8085
+        run: PORTAL_PORT=8085 PORTAL_BASE_URL=http://localhost:8085 docker compose up --build -d
+      - name: Verify both services can run simultaneously
+        env:
+          PORTAL_BASE_URL: http://localhost:8085
+        run: |
+          for i in $(seq 1 75); do
+            if curl -fsS http://localhost:8085/health >/dev/null && curl -fsS http://localhost:8081/realms/nepal-demo/.well-known/openid-configuration >/dev/null; then
+              break
+            fi
+            sleep 4
+          done
+          curl --fail --silent http://localhost:8085/health
+          python scripts/smoke_oidc.py
+      - name: Stop Nepal presentation portal
+        if: always()
+        run: PORTAL_PORT=8085 PORTAL_BASE_URL=http://localhost:8085 docker compose down -v
       - name: Diagnostics on failure
         if: failure()
         working-directory: native-altinn/nepal-licence

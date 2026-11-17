@@ -5,6 +5,7 @@ No third-party Python packages are needed; use:
     python scripts/smoke_oidc.py
 """
 import json
+import os
 import sys
 from html.parser import HTMLParser
 from http.cookiejar import CookieJar
@@ -12,7 +13,7 @@ from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
-BASE = "http://localhost:8000"
+BASE = os.getenv("PORTAL_BASE_URL", "http://localhost:8000")
 
 
 class LocalDevCookieJar(CookieJar):
