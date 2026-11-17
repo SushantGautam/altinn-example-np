@@ -73,7 +73,7 @@ function nativeAltinn(){
  return hero("Official Altinn source · supported local stack",
  "Native Altinn Apps.<br>BPMN and XACML.",
  "This repository contains an actual .NET Altinn App with a service model, process, XACML policy and Altinn UI. LocalTest emulates shared Norwegian platform APIs. No production Nepali institution is connected.",
- '<a class="btn primary" href="http://local.altinn.cloud:8000" target="_blank" rel="noopener">Open native Altinn ↗</a><button class="btn ghost" data-nav="ecosystem">Explore integration stubs</button>',
+ '<a class="btn primary" href="http://local.altinn.cloud:8000/ttd/nepal-licence/" target="_blank" rel="noopener">Open native Altinn ↗</a><button class="btn ghost" data-nav="ecosystem">Explore integration stubs</button>',
  stepAside(["Start Altinn LocalTest with studioctl","Run real Altinn App runtime","Log in with LocalTest test user","Submit the native Altinn application"],"Native execution path"))+
  '<div class="section-heading"><div><h2>Native versus emulated</h2><p>Every layer is labelled precisely.</p></div></div><div class="grid three">'+
  feature("⚙","ACTUAL: Altinn Apps","Altinn.App.Api/Core, native form UI, model and process engine.")+

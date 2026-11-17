@@ -22,7 +22,7 @@ studioctl run --detach
 cat <<'MSG'
 
 Native Altinn application:
-  http://local.altinn.cloud:8000
+  http://local.altinn.cloud:8000/ttd/nepal-licence/
   Log in with LocalTest test users, not the NepalID sandbox users.
 
 Status:

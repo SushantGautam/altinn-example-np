@@ -22,7 +22,7 @@ Prerequisites: **.NET 10 SDK**, Docker/Podman/Colima, and the official
 bash scripts/start-native.sh
 ```
 
-Visit **http://local.altinn.cloud:8000** and use LocalTest test identities.
+Visit **http://local.altinn.cloud:8000/ttd/nepal-licence/** and use LocalTest test identities.
 The separate sandbox Keycloak users cannot authenticate to the native app.
 
 **Actual:** Altinn App runtime, process, UI, form model, instantiation hook and XACML policy.

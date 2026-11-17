@@ -33,7 +33,7 @@ jobs:
       - name: Check the app is reachable through LocalTest
         run: |
           for i in $(seq 1 45); do
-            code=$(curl --silent --output /tmp/altinn-response --write-out "%{http_code}" --header "Host: local.altinn.cloud" http://127.0.0.1:8000/ || true)
+            code=$(curl --silent --output /tmp/altinn-response --write-out "%{http_code}" --header "Host: local.altinn.cloud" http://127.0.0.1:8000/ttd/nepal-licence/ || true)
             if [[ "$code" =~ ^(200|301|302|303|307|308)$ ]]; then
               echo "Native Altinn gateway responds: HTTP $code"
               exit 0
