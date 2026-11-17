@@ -118,13 +118,15 @@ MSG
 
 down() {
   cd "$ROOT"
-  if command -v docker >/dev/null && docker compose version >/dev/null 2>&1; then
-    compose down --remove-orphans || true
-  fi
+  # The Altinn App is also attached to the portal's Compose network in
+  # combined mode; remove it BEFORE asking Compose to remove that network.
   if command -v studioctl >/dev/null; then
-    (cd "$APP" && studioctl stop && studioctl env down) || true
+    (cd "$APP" && { studioctl stop || true; studioctl env down || true; })
   else
     echo >&2 "studioctl unavailable: LocalTest-managed containers may remain running."
+  fi
+  if command -v docker >/dev/null && docker compose version >/dev/null 2>&1; then
+    compose down --remove-orphans || true
   fi
   rm -f "$ENV_FILE"
   echo "Stopped Nepal simulator and Altinn LocalTest containers; data volumes retained."
