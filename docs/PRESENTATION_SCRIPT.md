@@ -62,6 +62,6 @@ A sensible next step would be a small technical pilot with one willing Nepali go
 
 ## After the meeting
 
-Run `./demo down` to stop the containers. It preserves local demonstration records. Use `./demo clean --yes` only when you intend to remove simulator data.
+Run `./demo down` to stop the containers. It preserves local demonstration records. Use `./demo clean --yes` only when you intend to remove all local synthetic portal, agency and broker data.
 
 See [component status](ALTINN_COMPONENT_STATUS.md) and [architecture](ARCHITECTURE.md) for implementation details, and [pilot plan](PILOT_PLAN.md) for evaluation criteria.
