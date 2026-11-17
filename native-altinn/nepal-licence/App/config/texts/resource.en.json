@@ -1,0 +1,29 @@
+{
+  "language": "en",
+  "resources": [
+    {
+      "id": "pilot.header",
+      "value": "Driving licence information correction"
+    },
+    {
+      "id": "pilot.explanation",
+      "value": "Native Altinn Apps demonstration for Nepal. Submit synthetic information only. This service uses Altinn's real application runtime and LocalTest platform emulators; it does not communicate with Nepal's government."
+    },
+    {
+      "id": "licence.number",
+      "value": "Demo driving licence number"
+    },
+    {
+      "id": "licence.address",
+      "value": "Requested corrected address"
+    },
+    {
+      "id": "licence.reason",
+      "value": "Reason for the correction"
+    },
+    {
+      "id": "pilot.submit",
+      "value": "Submit demonstration application"
+    }
+  ]
+}
