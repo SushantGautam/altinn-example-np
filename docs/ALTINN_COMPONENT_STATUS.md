@@ -2,7 +2,7 @@
 
 **Status: 17 November 2026.** Terms are deliberately strict.
 
-- **Genuine Altinn:** code from official Altinn Studio app template running in the native .NET process.
+- **Genuine Altinn:** official Altinn Studio app code now running by default as a **Docker .NET application**, with an optional developer process mode.
 - **Official LocalTest emulator:** test implementation of an Altinn API contract. It is **not** the independently deployed Norwegian shared platform service.
 - **Functional simulator:** locally implemented demonstration code, **not** an Altinn component.
 - **Synthetic connector:** a real local HTTP integration carrying made-up records, not a government API.
@@ -10,7 +10,7 @@
 
 | Capability | Current implementation | Verification / remaining limit |
 |---|---|---|
-| Altinn Apps .NET runtime | **Genuine Altinn** (`Altinn.App.Api/Core`), `native-altinn/nepal-licence` | Builds in `native-altinn.yml`; starts via `studioctl` in `native-localtest.yml` |
+| Altinn Apps .NET runtime | **Genuine Altinn** (`Altinn.App.Api/Core`), `native-altinn/nepal-licence` | Builds in `native-altinn.yml`; native container starts through `studioctl run --mode container` in `containerized-native.yml` |
 | Native form/UI/data model | **Genuine Altinn** layouts, model and text resources | Static consistency checks / .NET build; no full UI automation |
 | BPMN workflow | **Genuine Altinn** process (data task then PDF step) | Configured and startup-tested; **not** a native officer approval workflow |
 | XACML application policy | **Genuine policy** scoped to `ttd/nepal-licence` | Evaluated by LocalTest authorization emulator; still uses Norwegian LocalTest roles |
@@ -40,7 +40,8 @@
 |---|---|
 | [`ci.yml`](../.github/workflows/ci.yml) | Python API tests, authorization/CSRF, browser JS syntax, Docker Compose validation, real Keycloak OIDC demo flow, simulator event and delegation |
 | [`native-altinn.yml`](../.github/workflows/native-altinn.yml) | Native model/BPMN/XACML/layout consistency, NuGet restore, compile with actual Altinn packages |
-| [`native-localtest.yml`](../.github/workflows/native-localtest.yml) | Install `studioctl`, start LocalTest, build/run native Altinn, launch separate simulator on 8085, exercise fake HTTP bridge endpoints |
+| [`native-localtest.yml`](../.github/workflows/native-localtest.yml) | Additional development-mode host-process testing, not the default |
+| [`containerized-native.yml`](../.github/workflows/containerized-native.yml) | Full `./demo up` and `./demo down`, checks native app container, synthetic bridge, OIDC and teardown |
 
 **Meaning of green CI:** it proves only the checks above passed; it does **not** mean every feature is production-safe or a real user navigated an Altinn form in a browser. CI status can change after edits; use the latest action results.
 
@@ -58,3 +59,7 @@
 A validated deployment of the required shared **Authentication, Authorization/Access Management, Storage, Register, events/notification components** (or documented, integrated approved substitutes), a legal identity/party/representation model, production hosting/security/monitoring, and live agency APIs. None can be inferred simply from `studioctl env up`, which deliberately starts local emulators.
 
 Reference: [Official Altinn studioctl local development](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/). For next steps see [native integration path](NATIVE_ALTINN_PATH.md).
+
+## Local all-Docker execution
+
+`./demo up` runs every demo **runtime** in Docker: real Altinn App, official LocalTest emulators, Keycloak, Nepal simulator and databases. A host `studioctl` CLI manages Altinn's containers, but no host .NET SDK is needed. `./demo down` stops all containers and removes the shared Compose network while keeping data; `./demo clean --yes` additionally deletes simulator volume data. The independent national Altinn production microservices are **not installed**. See [Docker operations](DOCKER.md).
