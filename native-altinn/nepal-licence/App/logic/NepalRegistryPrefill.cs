@@ -59,12 +59,7 @@ public sealed class SyntheticNepalRegistryClient : INepalRegistryClient
 
     public async Task<SyntheticLicenceRecord> GetSyntheticLicence()
     {
-        string? target = Environment.GetEnvironmentVariable("DOTM_MOCK_REGISTRY_URL");
-        string? token = Environment.GetEnvironmentVariable("NATIVE_WEBHOOK_TOKEN");
-        if (Uri.TryCreate(target, UriKind.Absolute, out var uri)
-            && uri.Scheme == Uri.UriSchemeHttp
-            && uri.Host is ("127.0.0.1" or "localhost")
-            && !string.IsNullOrWhiteSpace(token))
+        if (LocalDemoBridge.TryGetTarget("dotm", out Uri? uri, out string? token))
         {
             try
             {

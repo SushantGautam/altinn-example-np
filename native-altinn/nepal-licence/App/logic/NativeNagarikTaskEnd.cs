@@ -31,19 +31,9 @@ public sealed class NativeNagarikTaskEnd : IProcessTaskEnd
             return;
         }
 
-        string? target = Environment.GetEnvironmentVariable("NAGARIK_DEMO_WEBHOOK_URL");
-        string? secret = Environment.GetEnvironmentVariable("NATIVE_WEBHOOK_TOKEN");
-        if (string.IsNullOrWhiteSpace(target) || string.IsNullOrWhiteSpace(secret))
+        if (!LocalDemoBridge.TryGetTarget("nagarik", out Uri? destination, out string? secret))
         {
             _logger.LogInformation("Native Altinn process finished data task; optional Nepal integration is disabled");
-            return;
-        }
-
-        if (!Uri.TryCreate(target, UriKind.Absolute, out var destination)
-            || destination.Scheme != Uri.UriSchemeHttp
-            || destination.Host is not ("localhost" or "127.0.0.1"))
-        {
-            _logger.LogWarning("Nagarik demonstration target must be an explicit local HTTP endpoint");
             return;
         }
 
