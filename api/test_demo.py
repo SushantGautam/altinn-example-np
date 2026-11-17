@@ -77,3 +77,22 @@ def test_observer_cannot_access_personal_cases(client):
     assert client.get("/api/audit").status_code == 200
     assert client.get("/api/registries/me").status_code == 403
     assert client.post("/api/demo/reset", json={}, headers=headers).status_code == 200
+
+
+def test_local_native_altinn_callback_is_authenticated_idempotent_and_visible(client, monkeypatch):
+    monkeypatch.setattr(main, "NATIVE_WEBHOOK_TOKEN", "unit-test-secret-only")
+    event = {"source": "ttd/nepal-licence", "event_type": "native.altinn.task.completed",
+             "event_id": "native.12345.abcdef.Task_1", "instance_id": "12345/abcdef"}
+    assert client.post("/api/integrations/native-altinn/events", json=event).status_code == 403
+    bad = dict(event, source="other-app")
+    assert client.post("/api/integrations/native-altinn/events", json=bad,
+                       headers={"x-native-demo-token": "unit-test-secret-only"}).status_code == 422
+    response = client.post("/api/integrations/native-altinn/events", json=event,
+                           headers={"x-native-demo-token": "unit-test-secret-only"})
+    assert response.status_code == 200, response.text
+    assert response.json() == {"accepted": True, "duplicate": False}
+    assert client.post("/api/integrations/native-altinn/events", json=event,
+                       headers={"x-native-demo-token": "unit-test-secret-only"}).json()["duplicate"]
+    act(client, "asha")
+    messages = client.get("/api/inbox").json()["notifications"]
+    assert len([x for x in messages if "Native Altinn" in x["title"]]) == 1

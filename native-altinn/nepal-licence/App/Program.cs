@@ -13,6 +13,8 @@ void RegisterCustomAppServices(IServiceCollection services, IConfiguration confi
     // Native Altinn IInstantiationProcessor prefill backed by a replaceable Nepal registry adapter.
     services.AddSingleton<INepalRegistryClient, SyntheticNepalRegistryClient>();
     services.AddTransient<Altinn.App.Core.Features.IInstantiationProcessor, NepalRegistryPrefill>();
+    services.AddHttpClient();
+    services.AddTransient<Altinn.App.Core.Features.IProcessTaskEnd, NativeNagarikTaskEnd>();
     // Register other custom service implementations here.
 }
 
