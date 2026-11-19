@@ -1,8 +1,12 @@
-# Nepal digital services: Altinn reference implementation
+# Altinn for Nepal
 
-A local demonstrator for exploring how Norway's Altinn technology could support digital public services in Nepal, alongside the existing Nagarik App.
+**An open-source reference implementation for interoperable digital public services in Nepal, built with Altinn.**
 
-This is an independent technical project. It is not a service of the Government of Nepal, the Norwegian government, Digdir, or the Altinn programme, and it has not been approved for public-service delivery.
+Explore how reusable service workflows, identity integration, access control and secure interagency exchange could complement Nepal's existing Nagarik App.
+
+[Architecture](docs/ARCHITECTURE.md) · [Technical setup](docs/DEVELOPER_GUIDE.md) · [Government brief (English)](docs/GOVERNMENT_BRIEF_EN.md) · [सरकारी परिचय](docs/GOVERNMENT_BRIEF_NP.md) · [Implementation status](docs/ALTINN_COMPONENT_STATUS.md)
+
+> **Independent proof of concept.** This repository contains a genuine Altinn application running with local test services, alongside Nepal-focused simulators. It is not affiliated with or endorsed by the governments of Nepal or Norway, Digdir, or the Altinn programme. No live government systems are connected.
 
 ## What this project demonstrates
 
@@ -27,7 +31,7 @@ A useful next step would be a small, jointly defined technical pilot with one wi
 
 ## Run locally
 
-Requirements: Docker with Compose v2, Bash, Git, and the official [Altinn `studioctl` preview CLI](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/). The application runtime is containerized; No host .NET SDK or Python runtime is required for the combined demonstration.
+Requirements: Docker with Compose v2, Bash, Git, and the official [Altinn `studioctl` preview CLI](https://docs.altinn.studio/en/altinn-studio/v8/guides/development/local-dev/). The application runtime is containerized; no host .NET SDK or Python installation is required for the combined demonstration.
 
 ```bash
 git clone https://github.com/SushantGautam/altinn-example-np.git

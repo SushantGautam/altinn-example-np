@@ -59,4 +59,4 @@ assert "studioctl run --mode container --detach" in launcher
 assert "docker network connect" in launcher
 assert "studioctl env down" in launcher
 assert "./demo up" in main and "./demo down" in main
-assert "No host .NET SDK" in main
+assert re.search(r"\bno host \.NET SDK\b", main, re.I), "README must explain host SDK requirement"
